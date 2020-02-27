@@ -6,6 +6,7 @@ import com.losttemple.sql.language.dialects.JdbcStringParameter
 import com.losttemple.sql.language.generate.ExpressionConstructor
 import com.losttemple.sql.language.generate.ReferenceConstructor
 import com.losttemple.sql.language.generate.SourceReference
+import com.losttemple.sql.language.operator.sources.SourceColumn
 import com.losttemple.sql.language.types.*
 import java.util.*
 
@@ -108,11 +109,6 @@ class DoubleSqlParameter(private val value: Double?): SqlParameter {
     override fun setParam(constructor: ExpressionConstructor) {
         constructor.constance(value)
     }
-}
-
-interface SourceColumn<T>: SqlType<T> {
-    val name: String
-    fun generateParameter(parameter: T?): SqlParameter
 }
 
 class IntSourceColumn(private val setReference: SetRef, override val name: String): SqlInt, SourceColumn<Int> {

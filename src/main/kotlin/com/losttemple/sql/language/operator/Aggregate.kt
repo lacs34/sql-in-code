@@ -1,14 +1,24 @@
 package com.losttemple.sql.language.operator
 
-import com.losttemple.sql.language.generate.ExpressionConstructor
-import com.losttemple.sql.language.generate.SourceReference
+import com.losttemple.sql.language.generate.*
 import com.losttemple.sql.language.types.*
 import java.sql.ResultSet
 
 class AggregateSet<T>(private val sourceSet: DbSet<T>): SqlSet {
     override fun push(constructor: SourceReference) {
         sourceSet.set.push(constructor)
-        constructor.aggregate()
+        if (constructor.groupStatus != GroupStatus.None || constructor.hasLimit) {
+            constructor.turnToEmbed()
+            constructor.aggregate()
+        }
+        else if (constructor.orderStatus != OrderStatus.None) {
+            constructor.turnToEmbed()
+            constructor.aggregate()
+            constructor.orderStatus = OrderStatus.None
+        }
+        else {
+            constructor.aggregate()
+        }
     }
 }
 

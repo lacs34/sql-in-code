@@ -423,7 +423,7 @@ class MySqlDialect: SqlDialect {
     }
 
     override fun dateResult(result: ResultSet, name: String): Date? {
-        val value = result.getDate(name)
+        val value = result.getTimestamp(name)
         val isNull = result.wasNull()
         if (isNull) {
             return null
