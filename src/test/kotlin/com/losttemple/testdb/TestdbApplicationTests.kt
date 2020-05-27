@@ -133,7 +133,7 @@ class QueryTests {
 			db { Rooms(it) }.insert {
 				it.floor(3)
 				it.soldTime(Date())
-			}
+			}()
 		}
 	}
 
@@ -143,7 +143,7 @@ class QueryTests {
 			db { Rooms(it) }.update {
 				//it.floor(it.capacity)
 				it.soldTime(it.soldTime + Duration.ofHours(2))
-			}
+			}()
 		}
 	}
 
@@ -157,7 +157,7 @@ class QueryTests {
 			}).update {
 				it.floor(it.capacity)
 				it.soldTime(it.soldTime + Duration.ofHours(2))
-			}
+			}()
 		}
 	}
 }

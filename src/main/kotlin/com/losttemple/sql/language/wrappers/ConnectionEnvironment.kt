@@ -29,15 +29,12 @@ open class ConnectionEnvironment(private val connection: Connection): AutoClosea
         return select(machine, connection, mapper)
     }
 
-    fun <T: DbSource> DbTableDescription<T>.insert(machine: SqlDialect, handler: DbInsertionEnvironment.(T)->Unit) {
-        insert(machine, connection, handler)
+    fun Inserter.run(machine: SqlDialect) {
+        run(machine, connection)
     }
 
-    fun <T: DbSource> DbTableDescription<T>.update(machine: SqlDialect, handler: DbUpdateEnvironment.(T)->Unit): Int {
-        return update(machine, connection, handler)
-    }
-    fun <T: DbSource> FilteredTableDescriptor<T>.update(machine: SqlDialect, handler: DbUpdateEnvironment.(T)->Unit) {
-        update(machine, connection, handler)
+    fun Updater.run(machine: SqlDialect): Int {
+        return run(machine, connection)
     }
 
     /*

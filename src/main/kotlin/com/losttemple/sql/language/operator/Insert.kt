@@ -3,7 +3,6 @@ package com.losttemple.sql.language.operator
 import com.losttemple.sql.language.generate.*
 import com.losttemple.sql.language.operator.sources.SourceColumn
 import com.losttemple.sql.language.types.SetRef
-import com.losttemple.sql.language.types.SqlSet
 import com.losttemple.sql.language.types.SqlType
 import java.sql.Connection
 
@@ -158,7 +157,7 @@ class DbTableDescription<T: DbSource>(private val creator: ((TableConfigure.()->
         sourceConfig.toSource().reference
     }
 
-    fun insert(machine: SqlDialect, connection: Connection, handler: DbInsertionEnvironment.(T)->Unit) {
+    fun insert(handler: DbInsertionEnvironment.(T)->Unit): Inserter {
         val sourceConfig = SourceTableConfigure()
         val source = creator {
             sourceConfig.it()
@@ -167,14 +166,14 @@ class DbTableDescription<T: DbSource>(private val creator: ((TableConfigure.()->
         val set = source.reference.set as SourceSet
         val environment = DbInsertionEnvironment(set.name)
         environment.handler(source)
-        environment.execute(machine, connection)
+        return Inserter(environment)
     }
 
-    fun update(machine: SqlDialect, connection: Connection, handler: DbUpdateEnvironment.(T)->Unit): Int {
+    fun update(handler: DbUpdateEnvironment.(T)->Unit): Updater {
         val set = source.reference.set as SourceSet
         val environment = DbUpdateEnvironment(set.name, null)
         environment.handler(source)
-        return environment.execute(machine, connection)
+        return Updater(environment)
     }
 
     infix fun where(predicate: T.()-> SqlType<Boolean>): FilteredTableDescriptor<T> {
@@ -197,11 +196,11 @@ class FilteredTableDescriptor<T: DbSource>(private val sourceSet: DbTableDescrip
         return filteredSet
     }
 
-    fun update(machine: SqlDialect, connection: Connection, handler: DbUpdateEnvironment.(T)->Unit): Int {
+    fun update(handler: DbUpdateEnvironment.(T)->Unit): Updater {
         val set = description.reference.set as SourceSet
         val environment = DbUpdateEnvironment(set.name, condition)
         environment.handler(description)
-        return environment.execute(machine, connection)
+        return Updater(environment)
     }
 }
 
@@ -223,5 +222,16 @@ class DbInsertionEnvironment(table: String) {
         if (affected != 1) {
             error("")
         }
+    }
+}
+
+class Inserter(private val environment: DbInsertionEnvironment) {
+    fun run(machine: SqlDialect, connection: Connection) {
+        environment.execute(machine, connection)
+    }
+}
+class Updater(private val environment: DbUpdateEnvironment) {
+    fun run(machine: SqlDialect, connection: Connection): Int {
+        return environment.execute(machine, connection)
     }
 }
