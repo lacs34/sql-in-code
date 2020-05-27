@@ -1,10 +1,10 @@
 package com.losttemple.sql.language.operator
 
-import com.losttemple.sql.language.generate.CountIdGenerator
-import com.losttemple.sql.language.generate.DefaultInsertConstructor
-import com.losttemple.sql.language.generate.EvaluateContext
+import com.losttemple.sql.language.generate.*
 import com.losttemple.sql.language.operator.sources.SourceColumn
 import com.losttemple.sql.language.types.SetRef
+import com.losttemple.sql.language.types.SqlSet
+import com.losttemple.sql.language.types.SqlType
 import java.sql.Connection
 
 /*
@@ -152,6 +152,12 @@ fun <T: DbSource> db(creator: ((TableConfigure.()->Unit)-> SetRef)->T): DbTableD
 }
 
 class DbTableDescription<T: DbSource>(private val creator: ((TableConfigure.()->Unit)-> SetRef)->T) {
+    private val sourceConfig = SourceTableConfigure()
+    val source = creator {
+        sourceConfig.it()
+        sourceConfig.toSource().reference
+    }
+
     fun insert(machine: SqlDialect, connection: Connection, handler: DbInsertionEnvironment.(T)->Unit) {
         val sourceConfig = SourceTableConfigure()
         val source = creator {
@@ -165,14 +171,36 @@ class DbTableDescription<T: DbSource>(private val creator: ((TableConfigure.()->
     }
 
     fun update(machine: SqlDialect, connection: Connection, handler: DbUpdateEnvironment.(T)->Unit): Int {
-        val sourceConfig = SourceTableConfigure()
-        val source = creator {
-            sourceConfig.it()
-            sourceConfig.toSource().reference
-        }
         val set = source.reference.set as SourceSet
-        val environment = DbUpdateEnvironment(set.name)
+        val environment = DbUpdateEnvironment(set.name, null)
         environment.handler(source)
+        return environment.execute(machine, connection)
+    }
+
+    infix fun where(predicate: T.()-> SqlType<Boolean>): FilteredTableDescriptor<T> {
+        val filteredSet = FilteredTableDescriptor(this)
+        val condition = source.predicate()
+        filteredSet.condition = condition
+        return filteredSet
+    }
+}
+
+class FilteredTableDescriptor<T: DbSource>(private val sourceSet: DbTableDescription<T>) {
+    val description: T = sourceSet.source
+    lateinit var condition: SqlType<Boolean>
+
+    infix fun where(predicate: T.()-> SqlType<Boolean>): FilteredTableDescriptor<T> {
+        val filteredSet = FilteredTableDescriptor(sourceSet)
+        val condition = description.predicate()
+
+        filteredSet.condition = this.condition.and(condition)
+        return filteredSet
+    }
+
+    fun update(machine: SqlDialect, connection: Connection, handler: DbUpdateEnvironment.(T)->Unit): Int {
+        val set = description.reference.set as SourceSet
+        val environment = DbUpdateEnvironment(set.name, condition)
+        environment.handler(description)
         return environment.execute(machine, connection)
     }
 }

@@ -7,6 +7,7 @@ interface AssignConstructor {
 class DefaultInsertConstructor(private val table: String):
         AssignConstructor, ExpressionSource, HashTarget {
     private val values: MutableMap<String, DefaultExpressionConstructor> = HashMap()
+
     private var source: DefaultSourceEvaluator = object: DefaultSourceEvaluator() {
         override fun evaluate(context: EvaluateContext): EC {
             val idGenerator = context.idGenerator
@@ -53,6 +54,10 @@ class DefaultInsertConstructor(private val table: String):
     fun root(outsideContext: EvaluateContext) {
         val dialect = outsideContext.dialect
         val idGenerator = outsideContext.idGenerator
+        val sourceEvaluator = source as SourceEvaluatorWithReference
+        val pathMapping = mapOf(sourceEvaluator to table)
+        val context = EvaluateContext(dialect, idGenerator, outsideContext.exports + pathMapping,
+                outsideContext.referenceMapping)
         dialect.columnList()
         var first = true
         val columnValues = ArrayList<MutableMap.MutableEntry<String, DefaultExpressionConstructor>>(values.entries)
@@ -68,7 +73,7 @@ class DefaultInsertConstructor(private val table: String):
         dialect.columnList()
         first = true
         for (columnValue in columnValues) {
-            columnValue.value.evaluate(outsideContext)
+            columnValue.value.evaluate(context)
             if (first) {
                 first = false
             }
@@ -83,6 +88,11 @@ class DefaultInsertConstructor(private val table: String):
 class DefaultUpdateConstructor(private val table: String):
         AssignConstructor, ExpressionSource, HashTarget {
     private val values: MutableMap<String, DefaultExpressionConstructor> = HashMap()
+    private var whereConstructor = DefaultExpressionConstructor(this, null)
+
+    val where: ExpressionConstructor
+        get() = whereConstructor
+
     private var source: DefaultSourceEvaluator = object: DefaultSourceEvaluator() {
         override fun evaluate(context: EvaluateContext): EC {
             val idGenerator = context.idGenerator
@@ -129,8 +139,8 @@ class DefaultUpdateConstructor(private val table: String):
     fun root(outsideContext: EvaluateContext) {
         val dialect = outsideContext.dialect
         val idGenerator = outsideContext.idGenerator
-        val vs = source as SourceEvaluatorWithReference
-        val pathMapping = mapOf(vs to table)
+        val sourceEvaluator = source as SourceEvaluatorWithReference
+        val pathMapping = mapOf(sourceEvaluator to table)
         val context = EvaluateContext(dialect, idGenerator, outsideContext.exports + pathMapping,
                 outsideContext.referenceMapping)
         dialect.table(table)
@@ -147,6 +157,13 @@ class DefaultUpdateConstructor(private val table: String):
                 dialect.addToList()
             }
         }
-        dialect.updateAll()
+
+        if (whereConstructor.isEmpty()) {
+            dialect.updateAll()
+        }
+        else {
+            whereConstructor.evaluate(context)
+            dialect.updateWithFilter()
+        }
     }
 }

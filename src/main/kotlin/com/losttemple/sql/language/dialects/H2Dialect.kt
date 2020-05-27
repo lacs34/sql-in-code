@@ -251,9 +251,6 @@ class H2Dialect: SqlDialect {
         if (duration < Duration.ZERO) {
             return subPeriod(duration.negated())
         }
-        val firstPart = durationParts.firstOrNull{
-            it.getPart(duration) > 0
-        }?: defaultPart
         val wholePart = durationParts.firstOrNull {
             it.isWhole(duration)
         } ?: defaultPart
@@ -460,10 +457,12 @@ class H2Environment(database: String):
         return update(mysqlDialect, handler)
     }
 
-    /*override fun <T : DbSource> FilteredDbTable<T>.update(handler: DbUpdateEnvironment.(T) -> Unit) {
+    override fun <T : DbSource> FilteredTableDescriptor<T>.update(handler: DbUpdateEnvironment.(T) -> Unit) {
         val mysqlDialect = H2Dialect()
         update(mysqlDialect, handler)
     }
+
+    /*
 
     override fun <T : DbSource> FilteredDbTable<T>.delete() {
         val mysqlDialect = H2Dialect()

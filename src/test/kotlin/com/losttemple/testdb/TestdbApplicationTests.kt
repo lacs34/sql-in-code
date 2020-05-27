@@ -146,4 +146,18 @@ class QueryTests {
 			}
 		}
 	}
+
+	@Test
+	fun basicUpdateWithFilter() {
+		val result = h2.run {
+			(db { Rooms(it) } where {
+				floor eq 2
+			} where {
+				capacity gt floor
+			}).update {
+				it.floor(it.capacity)
+				it.soldTime(it.soldTime + Duration.ofHours(2))
+			}
+		}
+	}
 }

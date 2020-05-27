@@ -456,7 +456,8 @@ interface DialectEnvironment: AutoCloseable {
     fun <T, R> DbInstanceResult<T>.select(mapper: QueryResultAccessor.(T)->R): List<R>
     fun <T: DbSource> DbTableDescription<T>.insert(handler: DbInsertionEnvironment.(T)->Unit)
     fun <T: DbSource> DbTableDescription<T>.update(handler: DbUpdateEnvironment.(T)->Unit): Int
-    /*fun <T: DbSource> FilteredDbTable<T>.update(handler: DbUpdateEnvironment.(T)->Unit)
+    fun <T: DbSource> FilteredTableDescriptor<T>.update(handler: DbUpdateEnvironment.(T)->Unit)
+    /*
     fun <T: DbSource> FilteredDbTable<T>.delete()
     fun <T: DbSource> DbTableDescription<T>.delete()
     fun <T: DbSource> delete(creator: ((TableConfigure.()->Unit)-> SetRef)->T)*/
@@ -489,10 +490,12 @@ class MySqlEnvironment(connection: String, user: String, password: String):
         return update(mysqlDialect, handler)
     }
 
-    /*override fun <T : DbSource> FilteredDbTable<T>.update(handler: DbUpdateEnvironment.(T) -> Unit) {
+    override fun <T : DbSource> FilteredTableDescriptor<T>.update(handler: DbUpdateEnvironment.(T) -> Unit) {
         val mysqlDialect = MySqlDialect()
         update(mysqlDialect, handler)
     }
+
+    /*
 
     override fun <T : DbSource> FilteredDbTable<T>.delete() {
         val mysqlDialect = MySqlDialect()

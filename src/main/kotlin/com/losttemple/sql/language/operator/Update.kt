@@ -8,8 +8,12 @@ import com.losttemple.sql.language.types.SqlType
 import java.sql.Connection
 
 
-class DbUpdateEnvironment(table: String) {
+class DbUpdateEnvironment(table: String, val condition: SqlType<Boolean>?) {
     private val update = DefaultUpdateConstructor(table)
+
+    init {
+        condition?.push(update.where)
+    }
 
     operator fun <T> SourceColumn<T>.invoke(value: T) {
         val constructor = update.addValue(name)
