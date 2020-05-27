@@ -29,7 +29,11 @@ open class ConnectionEnvironment(private val connection: Connection): AutoClosea
         return select(machine, connection, mapper)
     }
 
-    fun Inserter.run(machine: SqlDialect) {
+    fun <T: DbSource> Inserter<T>.run(machine: SqlDialect) {
+        run(machine, connection)
+    }
+
+    fun <T: DbSource, R> InserterWithRet<T, R>.run(machine: SqlDialect) {
         run(machine, connection)
     }
 

@@ -86,7 +86,7 @@ class JdbcDoubleParameter(private val value: Double?): JdbcSqlParameter {
 
 data class JdbcSqlSegment(val sql: String, val parameters: List<JdbcSqlParameter>) {
     fun prepare(connection: Connection): PreparedStatement {
-        val statement = connection.prepareStatement(sql);
+        val statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
         for ((index, parameter) in parameters.withIndex()) {
             parameter.setParam(statement, index + 1)
         }

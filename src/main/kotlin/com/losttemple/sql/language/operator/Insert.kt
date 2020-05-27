@@ -5,6 +5,8 @@ import com.losttemple.sql.language.operator.sources.SourceColumn
 import com.losttemple.sql.language.types.SetRef
 import com.losttemple.sql.language.types.SqlType
 import java.sql.Connection
+import java.sql.ResultSet
+import java.sql.Statement
 
 /*
 class DbInsertionEnvironment(private val table: String) {
@@ -157,11 +159,11 @@ class DbTableDescription<T: DbSource>(private val creator: ((TableConfigure.()->
         sourceConfig.toSource().reference
     }
 
-    fun insert(handler: DbInsertionEnvironment.(T)->Unit): Inserter {
+    fun insert(handler: DbInsertionEnvironment.(T)->Unit): Inserter<T> {
         val set = source.reference.set as SourceSet
         val environment = DbInsertionEnvironment(set.name)
         environment.handler(source)
-        return Inserter(environment)
+        return Inserter<T>(environment, source)
     }
 
     fun update(handler: DbUpdateEnvironment.(T)->Unit): Updater {
@@ -220,21 +222,53 @@ class DbInsertionEnvironment(table: String) {
         parameter.setParam(constructor)
     }
 
-    fun execute(machine: SqlDialect, connection: Connection) {
+    fun execute(machine: SqlDialect, connection: Connection): ResultSet {
         val context = EvaluateContext(machine, CountIdGenerator(), mapOf(), mapOf())
         insert.root(context)
         println(machine.sql.describe())
         val statement = machine.sql.prepare(connection)
-        val affected = statement.executeUpdate()
-        if (affected != 1) {
-            error("")
-        }
+        statement.executeUpdate()
+        return statement.generatedKeys
     }
 }
 
-class Inserter(private val environment: DbInsertionEnvironment) {
+class Inserter<T: DbSource>(private val environment: DbInsertionEnvironment, private val descriptor: T) {
     fun run(machine: SqlDialect, connection: Connection) {
         environment.execute(machine, connection)
+    }
+
+    fun <R> ret(value: InsertRetEnvironment.(T) -> R): InserterWithRet<T, R> {
+        return InserterWithRet(environment, value, descriptor)
+    }
+}
+
+class InsertRetEnvironment(private val result: ResultSet, private val dialect: SqlDialect) {
+    fun <T> get(value: SourceColumn<T>): T? {
+        val name = value.name
+        return value.getFromResult(dialect, result, name)
+    }
+
+    val <T> SourceColumn<T>.v: T?
+        get() {
+            val name = name
+            return this.getFromResult(dialect, result, name)
+        }
+
+    operator fun <T> SourceColumn<T>.invoke(): T? {
+        val name = name
+        return this.getFromResult(dialect, result, name)
+    }
+}
+
+class InserterWithRet<T: DbSource, R>(
+        private val environment: DbInsertionEnvironment,
+        private val retValue: InsertRetEnvironment.(T) -> R,
+        private val descriptor: T) {
+    fun run(machine: SqlDialect, connection: Connection) {
+        val result = environment.execute(machine, connection)
+        result.next()
+        val retEnvironment = InsertRetEnvironment(result, machine)
+        retEnvironment.retValue(descriptor)
     }
 }
 class Updater(private val environment: DbUpdateEnvironment) {

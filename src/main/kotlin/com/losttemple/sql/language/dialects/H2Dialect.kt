@@ -447,7 +447,12 @@ class H2Environment(database: String):
         return select(mysqlDialect, mapper)
     }
 
-    override fun Inserter.invoke() {
+    override fun <T : DbSource> Inserter<T>.invoke() {
+        val mysqlDialect = H2Dialect()
+        return run(mysqlDialect)
+    }
+
+    override fun <T : DbSource, R> InserterWithRet<T, R>.invoke() {
         val mysqlDialect = H2Dialect()
         return run(mysqlDialect)
     }

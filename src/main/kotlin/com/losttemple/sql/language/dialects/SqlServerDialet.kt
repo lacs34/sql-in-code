@@ -483,7 +483,12 @@ class SqlServerEnvironment(connection: String, user: String, password: String):
         return select(mysqlDialect, mapper)
     }
 
-    override fun Inserter.invoke() {
+    override fun <T : DbSource> Inserter<T>.invoke() {
+        val mysqlDialect = SqlServerDialect()
+        return run(mysqlDialect)
+    }
+
+    override fun <T : DbSource, R> InserterWithRet<T, R>.invoke() {
         val mysqlDialect = SqlServerDialect()
         return run(mysqlDialect)
     }

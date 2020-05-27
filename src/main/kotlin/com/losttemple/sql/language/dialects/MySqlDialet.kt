@@ -454,7 +454,8 @@ interface DialectEnvironment: AutoCloseable {
     fun <T, R> DbResult<T>.select(mapper: QueryResultAccessor.(T)->R): List<R>
     operator fun <T> DbInstance<SqlType<T>>.invoke(): T?
     fun <T, R> DbInstanceResult<T>.select(mapper: QueryResultAccessor.(T)->R): List<R>
-    operator fun Inserter.invoke()
+    operator fun <T: DbSource> Inserter<T>.invoke()
+    operator fun <T: DbSource, R> InserterWithRet<T, R>.invoke()
     operator fun Updater.invoke(): Int
     fun <T: DbSource> DbTableDescription<T>.delete()
     fun <T: DbSource> FilteredTableDescriptor<T>.delete()
@@ -481,7 +482,12 @@ class MySqlEnvironment(connection: String, user: String, password: String):
         return select(mysqlDialect, mapper)
     }
 
-    override fun Inserter.invoke() {
+    override fun <T : DbSource> Inserter<T>.invoke() {
+        val mysqlDialect = MySqlDialect()
+        return run(mysqlDialect)
+    }
+
+    override fun <T : DbSource, R> InserterWithRet<T, R>.invoke() {
         val mysqlDialect = MySqlDialect()
         return run(mysqlDialect)
     }

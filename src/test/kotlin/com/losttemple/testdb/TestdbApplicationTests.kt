@@ -138,6 +138,19 @@ class QueryTests {
 	}
 
 	@Test
+	fun insertWithReturn() {
+		var x: Int? = 0
+		val result = h2.run {
+			db { Rooms(it) }.insert {
+				it.floor(3)
+				it.soldTime(Date())
+			}.ret {
+				x = it.id()
+			}()
+		}
+	}
+
+	@Test
 	fun basicUpdate() {
 		val result = h2.run {
 			db { Rooms(it) }.update {
