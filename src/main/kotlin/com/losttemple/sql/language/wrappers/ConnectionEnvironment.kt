@@ -37,6 +37,14 @@ open class ConnectionEnvironment(private val connection: Connection): AutoClosea
         return run(machine, connection)
     }
 
+    fun <T: DbSource> DbTableDescription<T>.delete(machine: SqlDialect) {
+        delete(machine, connection)
+    }
+
+    fun <T: DbSource> FilteredTableDescriptor<T>.delete(machine: SqlDialect) {
+        delete(machine, connection)
+    }
+
     /*
 
         fun <T: DbSource> FilteredDbTable<T>.delete(machine: SqlDialect) {

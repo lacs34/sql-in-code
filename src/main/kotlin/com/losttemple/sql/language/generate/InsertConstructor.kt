@@ -167,3 +167,66 @@ class DefaultUpdateConstructor(private val table: String):
         }
     }
 }
+
+class DefaultDeleteConstructor(private val table: String):
+        ExpressionSource, HashTarget {
+    private var whereConstructor = DefaultExpressionConstructor(this, null)
+
+    val where: ExpressionConstructor
+        get() = whereConstructor
+
+    private var source: DefaultSourceEvaluator = object: DefaultSourceEvaluator() {
+        override fun evaluate(context: EvaluateContext): EC {
+            val idGenerator = context.idGenerator
+            val dialect = context.dialect
+            val id = idGenerator.nextId()
+            dialect.table(table)
+            dialect.rename(id)
+            return EC(mapOf(), id, mapOf(), mapOf())
+        }
+
+        override fun reference(): REC {
+            return REC(mapOf())
+        }
+    }
+
+    private fun hash1(): HashSqlSegment {
+        val dialect = HashDialect()
+        val idGenerator = CountIdGenerator()
+        val context = EvaluateContext(dialect, idGenerator, mapOf(), mapOf())
+        source.allEvaluator(context)
+        return dialect.hash()
+    }
+
+    override fun hash(): Map<HashSqlSegment, HashTarget> {
+        val result = HashMap<HashSqlSegment, HashTarget>()
+        val currentHash = hash1()
+        result[currentHash] = this
+        return result
+    }
+
+    override fun findSource(path: String): SourceEvaluatorWithReference? {
+        if (path == "") {
+            return source
+        }
+        return null
+    }
+
+    fun root(outsideContext: EvaluateContext) {
+        val dialect = outsideContext.dialect
+        val idGenerator = outsideContext.idGenerator
+        val sourceEvaluator = source as SourceEvaluatorWithReference
+        val pathMapping = mapOf(sourceEvaluator to table)
+        val context = EvaluateContext(dialect, idGenerator, outsideContext.exports + pathMapping,
+                outsideContext.referenceMapping)
+
+        if (whereConstructor.isEmpty()) {
+            dialect.deleteAll(table)
+        }
+        else {
+            dialect.table(table)
+            whereConstructor.evaluate(context)
+            dialect.delete()
+        }
+    }
+}

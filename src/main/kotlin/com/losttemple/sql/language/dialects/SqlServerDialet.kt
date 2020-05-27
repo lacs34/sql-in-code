@@ -493,6 +493,16 @@ class SqlServerEnvironment(connection: String, user: String, password: String):
         return run(mysqlDialect)
     }
 
+    override fun <T : DbSource> DbTableDescription<T>.delete() {
+        val mysqlDialect = SqlServerDialect()
+        return delete(mysqlDialect)
+    }
+
+    override fun <T : DbSource> FilteredTableDescriptor<T>.delete() {
+        val mysqlDialect = SqlServerDialect()
+        return delete(mysqlDialect)
+    }
+
     /*
 
     override fun <T : DbSource> FilteredDbTable<T>.delete() {

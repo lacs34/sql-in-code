@@ -457,6 +457,16 @@ class H2Environment(database: String):
         return run(mysqlDialect)
     }
 
+    override fun <T : DbSource> DbTableDescription<T>.delete() {
+        val mysqlDialect = H2Dialect()
+        return delete(mysqlDialect)
+    }
+
+    override fun <T : DbSource> FilteredTableDescriptor<T>.delete() {
+        val mysqlDialect = H2Dialect()
+        return delete(mysqlDialect)
+    }
+
     /*
 
     override fun <T : DbSource> FilteredDbTable<T>.delete() {

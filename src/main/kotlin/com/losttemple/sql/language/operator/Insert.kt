@@ -158,11 +158,6 @@ class DbTableDescription<T: DbSource>(private val creator: ((TableConfigure.()->
     }
 
     fun insert(handler: DbInsertionEnvironment.(T)->Unit): Inserter {
-        val sourceConfig = SourceTableConfigure()
-        val source = creator {
-            sourceConfig.it()
-            sourceConfig.toSource().reference
-        }
         val set = source.reference.set as SourceSet
         val environment = DbInsertionEnvironment(set.name)
         environment.handler(source)
@@ -174,6 +169,12 @@ class DbTableDescription<T: DbSource>(private val creator: ((TableConfigure.()->
         val environment = DbUpdateEnvironment(set.name, null)
         environment.handler(source)
         return Updater(environment)
+    }
+
+    fun delete(machine: SqlDialect, connection: Connection): Int {
+        val set = source.reference.set as SourceSet
+        val environment = DbDeleteEnvironment(set.name, null)
+        return environment.execute(machine, connection)
     }
 
     infix fun where(predicate: T.()-> SqlType<Boolean>): FilteredTableDescriptor<T> {
@@ -201,6 +202,12 @@ class FilteredTableDescriptor<T: DbSource>(private val sourceSet: DbTableDescrip
         val environment = DbUpdateEnvironment(set.name, condition)
         environment.handler(description)
         return Updater(environment)
+    }
+
+    fun delete(machine: SqlDialect, connection: Connection): Int {
+        val set = description.reference.set as SourceSet
+        val environment = DbDeleteEnvironment(set.name, condition)
+        return environment.execute(machine, connection)
     }
 }
 

@@ -160,4 +160,15 @@ class QueryTests {
 			}()
 		}
 	}
+
+	@Test
+	fun basicDeleteWithFilter() {
+		val result = h2.run {
+			(db { Rooms(it) } where {
+				floor eq 2
+			} where {
+				capacity gt floor
+			}).delete()
+		}
+	}
 }
