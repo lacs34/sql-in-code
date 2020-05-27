@@ -33,12 +33,12 @@ open class ConnectionEnvironment(private val connection: Connection): AutoClosea
         insert(machine, connection, handler)
     }
 
+    fun <T: DbSource> DbTableDescription<T>.update(machine: SqlDialect, handler: DbUpdateEnvironment.(T)->Unit): Int {
+        return update(machine, connection, handler)
+    }
+
     /*
         fun <T: DbSource> FilteredDbTable<T>.update(machine: SqlDialect, handler: DbUpdateEnvironment.(T)->Unit) {
-            update(machine, connection, handler)
-        }
-
-        fun <T: DbSource> DbTableDescription<T>.update(machine: SqlDialect, handler: DbUpdateEnvironment.(T)->Unit) {
             update(machine, connection, handler)
         }
 

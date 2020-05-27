@@ -488,12 +488,12 @@ class SqlServerEnvironment(connection: String, user: String, password: String):
         insert(mysqlDialect, handler)
     }
 
-    /*override fun <T : DbSource> FilteredDbTable<T>.update(handler: DbUpdateEnvironment.(T) -> Unit) {
+    override fun <T: DbSource> DbTableDescription<T>.update(handler: DbUpdateEnvironment.(T)->Unit): Int {
         val mysqlDialect = SqlServerDialect()
-        update(mysqlDialect, handler)
+        return update(mysqlDialect, handler)
     }
 
-    override fun <T: DbSource> DbTableDescription<T>.update(handler: DbUpdateEnvironment.(T)->Unit) {
+    /*override fun <T : DbSource> FilteredDbTable<T>.update(handler: DbUpdateEnvironment.(T) -> Unit) {
         val mysqlDialect = SqlServerDialect()
         update(mysqlDialect, handler)
     }

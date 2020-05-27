@@ -6,6 +6,7 @@ import com.losttemple.sql.language.reflection.useAll
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import java.time.Duration
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -132,6 +133,16 @@ class QueryTests {
 			db { Rooms(it) }.insert {
 				it.floor(3)
 				it.soldTime(Date())
+			}
+		}
+	}
+
+	@Test
+	fun basicUpdate() {
+		val result = h2.run {
+			db { Rooms(it) }.update {
+				//it.floor(it.capacity)
+				it.soldTime(it.soldTime + Duration.ofHours(2))
 			}
 		}
 	}

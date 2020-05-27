@@ -163,6 +163,18 @@ class DbTableDescription<T: DbSource>(private val creator: ((TableConfigure.()->
         environment.handler(source)
         environment.execute(machine, connection)
     }
+
+    fun update(machine: SqlDialect, connection: Connection, handler: DbUpdateEnvironment.(T)->Unit): Int {
+        val sourceConfig = SourceTableConfigure()
+        val source = creator {
+            sourceConfig.it()
+            sourceConfig.toSource().reference
+        }
+        val set = source.reference.set as SourceSet
+        val environment = DbUpdateEnvironment(set.name)
+        environment.handler(source)
+        return environment.execute(machine, connection)
+    }
 }
 
 class DbInsertionEnvironment(table: String) {

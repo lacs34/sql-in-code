@@ -174,7 +174,7 @@ class H2Dialect: SqlDialect {
                 return Duration.ofMillis(count)
             }
             override val name: String
-                get() = "MICROSECOND"
+                get() = "MILLISECOND"
 
         }
         private val durationParts = listOf<DurationPart>(
@@ -236,20 +236,10 @@ class H2Dialect: SqlDialect {
         if (duration < Duration.ZERO) {
             return subPeriod(duration.negated())
         }
-        val firstPart = durationParts.firstOrNull{
-            it.getPart(duration) > 0
-        }?: defaultPart
-        if (firstPart.isWhole(duration)) {
-            push("DATE_ADD($base, INTERVAL ${firstPart.getPart(duration)} ${firstPart.name})", base)
-        }
-        else {
-            val wholePart = durationParts.firstOrNull {
-                it.isWhole(duration)
-            } ?: defaultPart
-            val firstPartValue = firstPart.getPart(duration)
-            val remainder = duration.minus(firstPart.fromPart(firstPartValue))
-            push("DATE_ADD($base, INTERVAL '${firstPartValue} ${wholePart.getPart(remainder)}' ${firstPart.name}_${wholePart.name})", base)
-        }
+        val wholePart = durationParts.firstOrNull {
+            it.isWhole(duration)
+        } ?: defaultPart
+        push("DATEADD(${wholePart.name}, ${wholePart.getPart(duration)}, $base)", base)
     }
 
     override fun subPeriod(period: Duration) {
@@ -264,17 +254,10 @@ class H2Dialect: SqlDialect {
         val firstPart = durationParts.firstOrNull{
             it.getPart(duration) > 0
         }?: defaultPart
-        if (firstPart.isWhole(duration)) {
-            push("DATE_SUB($base, INTERVAL ${firstPart.getPart(duration)} ${firstPart.name})", base)
-        }
-        else {
-            val wholePart = durationParts.firstOrNull {
-                it.isWhole(duration)
-            } ?: defaultPart
-            val firstPartValue = firstPart.getPart(duration)
-            val remainder = duration.minus(firstPart.fromPart(firstPartValue))
-            push("DATE_SUB($base, INTERVAL '${firstPartValue} ${wholePart.getPart(remainder)}' ${firstPart.name}_${wholePart.name})", base)
-        }
+        val wholePart = durationParts.firstOrNull {
+            it.isWhole(duration)
+        } ?: defaultPart
+        push("DATEADD(${wholePart.name}, -${wholePart.getPart(duration)}, $base)", base)
     }
 
     override fun leftJoin() {
@@ -472,12 +455,12 @@ class H2Environment(database: String):
         insert(mysqlDialect, handler)
     }
 
-    /*override fun <T : DbSource> FilteredDbTable<T>.update(handler: DbUpdateEnvironment.(T) -> Unit) {
+    override fun <T: DbSource> DbTableDescription<T>.update(handler: DbUpdateEnvironment.(T)->Unit): Int {
         val mysqlDialect = H2Dialect()
-        update(mysqlDialect, handler)
+        return update(mysqlDialect, handler)
     }
 
-    override fun <T: DbSource> DbTableDescription<T>.update(handler: DbUpdateEnvironment.(T)->Unit) {
+    /*override fun <T : DbSource> FilteredDbTable<T>.update(handler: DbUpdateEnvironment.(T) -> Unit) {
         val mysqlDialect = H2Dialect()
         update(mysqlDialect, handler)
     }

@@ -455,8 +455,8 @@ interface DialectEnvironment: AutoCloseable {
     operator fun <T> DbInstance<SqlType<T>>.invoke(): T?
     fun <T, R> DbInstanceResult<T>.select(mapper: QueryResultAccessor.(T)->R): List<R>
     fun <T: DbSource> DbTableDescription<T>.insert(handler: DbInsertionEnvironment.(T)->Unit)
+    fun <T: DbSource> DbTableDescription<T>.update(handler: DbUpdateEnvironment.(T)->Unit): Int
     /*fun <T: DbSource> FilteredDbTable<T>.update(handler: DbUpdateEnvironment.(T)->Unit)
-    fun <T: DbSource> DbTableDescription<T>.update(handler: DbUpdateEnvironment.(T)->Unit)
     fun <T: DbSource> FilteredDbTable<T>.delete()
     fun <T: DbSource> DbTableDescription<T>.delete()
     fun <T: DbSource> delete(creator: ((TableConfigure.()->Unit)-> SetRef)->T)*/
@@ -484,12 +484,12 @@ class MySqlEnvironment(connection: String, user: String, password: String):
         insert(mysqlDialect, handler)
     }
 
-    /*override fun <T : DbSource> FilteredDbTable<T>.update(handler: DbUpdateEnvironment.(T) -> Unit) {
+    override fun <T: DbSource> DbTableDescription<T>.update(handler: DbUpdateEnvironment.(T)->Unit): Int {
         val mysqlDialect = MySqlDialect()
-        update(mysqlDialect, handler)
+        return update(mysqlDialect, handler)
     }
 
-    override fun <T: DbSource> DbTableDescription<T>.update(handler: DbUpdateEnvironment.(T)->Unit) {
+    /*override fun <T : DbSource> FilteredDbTable<T>.update(handler: DbUpdateEnvironment.(T) -> Unit) {
         val mysqlDialect = MySqlDialect()
         update(mysqlDialect, handler)
     }
