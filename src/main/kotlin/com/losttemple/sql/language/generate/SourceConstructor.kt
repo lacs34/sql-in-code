@@ -34,6 +34,10 @@ interface SourceEvaluatorWithReference {
     }
 }
 
+interface HashTarget {
+    fun findSource(path: String): SourceEvaluatorWithReference?
+}
+
 abstract class DefaultSourceEvaluator: SourceEvaluatorWithReference {
     override val referencedColumns: MutableSet<String> = HashSet()
 }

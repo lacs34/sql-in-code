@@ -211,7 +211,7 @@ class H2Dialect: SqlDialect {
                 },
                 object: DurationPart {
                     override fun getPart(duration: Duration): Long {
-                        return duration.toSeconds()
+                        return duration.seconds
                     }
                     override fun fromPart(count: Long): Duration {
                         return Duration.ofSeconds(count)
@@ -467,12 +467,12 @@ class H2Environment(database: String):
         return select(mysqlDialect, mapper)
     }
 
-    /*override fun <T: DbSource> DbTableDescription<T>.insert(handler: DbInsertionEnvironment.(T)->Unit) {
+    override fun <T: DbSource> DbTableDescription<T>.insert(handler: DbInsertionEnvironment.(T)->Unit) {
         val mysqlDialect = H2Dialect()
         insert(mysqlDialect, handler)
     }
 
-    override fun <T : DbSource> FilteredDbTable<T>.update(handler: DbUpdateEnvironment.(T) -> Unit) {
+    /*override fun <T : DbSource> FilteredDbTable<T>.update(handler: DbUpdateEnvironment.(T) -> Unit) {
         val mysqlDialect = H2Dialect()
         update(mysqlDialect, handler)
     }

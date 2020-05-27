@@ -211,7 +211,7 @@ class MySqlDialect: SqlDialect {
             },
             object: DurationPart {
                 override fun getPart(duration: Duration): Long {
-                    return duration.toSeconds()
+                    return duration.seconds
                 }
                 override fun fromPart(count: Long): Duration {
                     return Duration.ofSeconds(count)
@@ -454,8 +454,8 @@ interface DialectEnvironment: AutoCloseable {
     fun <T, R> DbResult<T>.select(mapper: QueryResultAccessor.(T)->R): List<R>
     operator fun <T> DbInstance<SqlType<T>>.invoke(): T?
     fun <T, R> DbInstanceResult<T>.select(mapper: QueryResultAccessor.(T)->R): List<R>
-    /*fun <T: DbSource> DbTableDescription<T>.insert(handler: DbInsertionEnvironment.(T)->Unit)
-    fun <T: DbSource> FilteredDbTable<T>.update(handler: DbUpdateEnvironment.(T)->Unit)
+    fun <T: DbSource> DbTableDescription<T>.insert(handler: DbInsertionEnvironment.(T)->Unit)
+    /*fun <T: DbSource> FilteredDbTable<T>.update(handler: DbUpdateEnvironment.(T)->Unit)
     fun <T: DbSource> DbTableDescription<T>.update(handler: DbUpdateEnvironment.(T)->Unit)
     fun <T: DbSource> FilteredDbTable<T>.delete()
     fun <T: DbSource> DbTableDescription<T>.delete()
@@ -479,12 +479,12 @@ class MySqlEnvironment(connection: String, user: String, password: String):
         return select(mysqlDialect, mapper)
     }
 
-    /*override fun <T: DbSource> DbTableDescription<T>.insert(handler: DbInsertionEnvironment.(T)->Unit) {
+    override fun <T: DbSource> DbTableDescription<T>.insert(handler: DbInsertionEnvironment.(T)->Unit) {
         val mysqlDialect = MySqlDialect()
         insert(mysqlDialect, handler)
     }
 
-    override fun <T : DbSource> FilteredDbTable<T>.update(handler: DbUpdateEnvironment.(T) -> Unit) {
+    /*override fun <T : DbSource> FilteredDbTable<T>.update(handler: DbUpdateEnvironment.(T) -> Unit) {
         val mysqlDialect = MySqlDialect()
         update(mysqlDialect, handler)
     }

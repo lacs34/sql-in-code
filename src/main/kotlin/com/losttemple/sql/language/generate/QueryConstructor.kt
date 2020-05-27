@@ -13,7 +13,8 @@ enum class ParentKind {
     Source
 }
 
-class DefaultQueryConstructor(private val parent: DefaultQueryConstructor?, private val parentKind: ParentKind): QueryConstructor, ExpressionSource {
+class DefaultQueryConstructor(private val parent: DefaultQueryConstructor?, private val parentKind: ParentKind):
+        QueryConstructor, ExpressionSource, HashTarget {
     constructor(): this(null, ParentKind.Select)
 
     private val select: MutableList<DefaultExpressionConstructor> = ArrayList()
@@ -364,5 +365,10 @@ class DefaultQueryConstructor(private val parent: DefaultQueryConstructor?, priv
         else {
             reference
         }
+    }
+
+    override fun findSource(path: String): SourceEvaluatorWithReference? {
+        val sourceReferences = queryReference()
+        return sourceReferences.other[path]
     }
 }

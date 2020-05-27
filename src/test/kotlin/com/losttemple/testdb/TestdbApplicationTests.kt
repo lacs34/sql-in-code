@@ -1,14 +1,13 @@
 package com.losttemple.testdb
 
 import com.losttemple.sql.language.dialects.H2Environment
-import com.losttemple.sql.language.operator.from
-import com.losttemple.sql.language.operator.group
-import com.losttemple.sql.language.operator.order
-import com.losttemple.sql.language.operator.use
+import com.losttemple.sql.language.operator.*
 import com.losttemple.sql.language.reflection.useAll
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import java.util.*
+import kotlin.collections.ArrayList
 
 class QueryTests {
 	companion object {
@@ -125,5 +124,15 @@ class QueryTests {
 			}
 		}
 		assert(true)
+	}
+
+	@Test
+	fun basicInsert() {
+		val result = h2.run {
+			db { Rooms(it) }.insert {
+				it.floor(3)
+				it.soldTime(Date())
+			}
+		}
 	}
 }

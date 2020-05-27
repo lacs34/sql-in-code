@@ -41,7 +41,7 @@ data class EvaluateContext(
 )
 
 interface ExpressionSource {
-    fun hash(): Map<HashSqlSegment, DefaultQueryConstructor>
+    fun hash(): Map<HashSqlSegment, HashTarget>
 }
 
 class DefaultExpressionConstructor(
@@ -221,8 +221,7 @@ class DefaultExpressionConstructor(
         val path = pathReference.path
         val exports = source.hash()
         val relatedSource = exports[hash] ?: return false
-        val sourceReferences = relatedSource.queryReference()
-        val v = sourceReferences.other[path] ?: return false
+        val v = relatedSource.findSource(path) ?: return false
         if (parent == null) {
             v.referencedColumns.add(pathReference.column)
         }
@@ -250,8 +249,7 @@ class DefaultExpressionConstructor(
         val path = pathReference.path
         val exports = source.hash()
         val relatedSource = exports[hash] ?: return
-        val sourceReferences = relatedSource.queryReference()
-        val v = sourceReferences.other[path] ?: return
+        val v = relatedSource.findSource(path) ?: return
         val operator = operators.last()
         operators.removeAt(operators.size - 1)
         var name = ""

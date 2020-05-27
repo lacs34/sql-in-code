@@ -275,7 +275,7 @@ class HashDialect: SqlDialect {
                 },
                 object: DurationPart {
                     override fun getPart(duration: Duration): Long {
-                        return duration.toSeconds()
+                        return duration.seconds
                     }
                     override fun fromPart(count: Long): Duration {
                         return Duration.ofSeconds(count)
@@ -395,7 +395,7 @@ class HashDialect: SqlDialect {
 
     override fun insert(name: String) {
         val values = pop()
-        push("INSERT INTO `$name` VALUES ($values)", values)
+        push("INSERT INTO `$name`", values)
     }
 
     override fun insertWithColumns(name: String) {

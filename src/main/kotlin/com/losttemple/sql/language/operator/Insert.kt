@@ -1,5 +1,12 @@
 package com.losttemple.sql.language.operator
 
+import com.losttemple.sql.language.generate.CountIdGenerator
+import com.losttemple.sql.language.generate.DefaultInsertConstructor
+import com.losttemple.sql.language.generate.EvaluateContext
+import com.losttemple.sql.language.operator.sources.SourceColumn
+import com.losttemple.sql.language.types.SetRef
+import java.sql.Connection
+
 /*
 class DbInsertionEnvironment(private val table: String) {
     private data class ColumnValue(
@@ -139,7 +146,42 @@ class FilteredDbTable<T: DbSource>(private val source: T, private val db: Source
         statement.executeUpdate()
     }
 }
-
+*/
 fun <T: DbSource> db(creator: ((TableConfigure.()->Unit)-> SetRef)->T): DbTableDescription<T> {
     return DbTableDescription(creator)
-}*/
+}
+
+class DbTableDescription<T: DbSource>(private val creator: ((TableConfigure.()->Unit)-> SetRef)->T) {
+    fun insert(machine: SqlDialect, connection: Connection, handler: DbInsertionEnvironment.(T)->Unit) {
+        val sourceConfig = SourceTableConfigure()
+        val source = creator {
+            sourceConfig.it()
+            sourceConfig.toSource().reference
+        }
+        val set = source.reference.set as SourceSet
+        val environment = DbInsertionEnvironment(set.name)
+        environment.handler(source)
+        environment.execute(machine, connection)
+    }
+}
+
+class DbInsertionEnvironment(table: String) {
+    private val insert = DefaultInsertConstructor(table)
+
+    operator fun <T> SourceColumn<T>.invoke(value: T?) {
+        val constructor = insert.addValue(name)
+        val parameter = generateParameter(value)
+        parameter.setParam(constructor)
+    }
+
+    fun execute(machine: SqlDialect, connection: Connection) {
+        val context = EvaluateContext(machine, CountIdGenerator(), mapOf(), mapOf())
+        insert.root(context)
+        println(machine.sql.describe())
+        val statement = machine.sql.prepare(connection)
+        val affected = statement.executeUpdate()
+        if (affected != 1) {
+            error("")
+        }
+    }
+}
