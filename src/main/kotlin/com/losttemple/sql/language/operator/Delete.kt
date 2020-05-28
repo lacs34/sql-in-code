@@ -19,7 +19,8 @@ class DbDeleteEnvironment(table: String, val condition: SqlType<Boolean>?) {
         val context = EvaluateContext(machine, CountIdGenerator(), mapOf(), mapOf())
         delete.root(context)
         println(machine.sql.describe())
-        val statement = machine.sql.prepare(connection)
-        return statement.executeUpdate()
+        return machine.sql.prepare(connection).use {
+            statement -> statement.executeUpdate()
+        }
     }
 }

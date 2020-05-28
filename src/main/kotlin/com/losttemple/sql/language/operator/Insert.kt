@@ -222,13 +222,17 @@ class DbInsertionEnvironment(table: String) {
         parameter.setParam(constructor)
     }
 
-    fun execute(machine: SqlDialect, connection: Connection): ResultSet {
+    fun fillContext(context: EvaluateContext) {
+        insert.root(context)
+    }
+
+    fun execute(machine: SqlDialect, connection: Connection) {
         val context = EvaluateContext(machine, CountIdGenerator(), mapOf(), mapOf())
         insert.root(context)
         println(machine.sql.describe())
-        val statement = machine.sql.prepare(connection)
-        statement.executeUpdate()
-        return statement.generatedKeys
+        machine.sql.prepare(connection).use { statement ->
+            statement.executeUpdate()
+        }
     }
 }
 
@@ -265,10 +269,23 @@ class InserterWithRet<T: DbSource, R>(
         private val retValue: InsertRetEnvironment.(T) -> R,
         private val descriptor: T) {
     fun run(machine: SqlDialect, connection: Connection) {
-        val result = environment.execute(machine, connection)
-        result.next()
-        val retEnvironment = InsertRetEnvironment(result, machine)
-        retEnvironment.retValue(descriptor)
+        val context = EvaluateContext(machine, CountIdGenerator(), mapOf(), mapOf())
+        environment.fillContext(context)
+        println(machine.sql.describe())
+        machine.sql.prepareWithGeneratedKeys(connection).use { statement ->
+            {
+
+                statement.executeUpdate()
+                statement.generatedKeys.use { result ->
+                    {
+
+                        result.next()
+                        val retEnvironment = InsertRetEnvironment(result, machine)
+                        retEnvironment.retValue(descriptor)
+                    }
+                }
+            }
+        }
     }
 }
 class Updater(private val environment: DbUpdateEnvironment) {
