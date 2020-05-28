@@ -466,65 +466,10 @@ class SqlServerDialect: SqlDialect {
     }
 }
 
-class SqlServerEnvironment(connection: String, user: String, password: String):
-        ConnectionEnvironment(connectTo("com.microsoft.sqlserver.jdbc.SQLServerDriver", connection, user, password)), DialectEnvironment {
-    override fun <T, R> DbResult<T>.select(mapper: QueryResultAccessor.(T)->R): List<R> {
-        val mysqlDialect = SqlServerDialect()
-        return select(mysqlDialect, mapper)
-    }
-
-    override operator fun <T> DbInstance<SqlType<T>>.invoke(): T? {
-        val mysqlDialect = SqlServerDialect()
-        return invoke(mysqlDialect)
-    }
-
-    override fun <T, R> DbInstanceResult<T>.select(mapper: QueryResultAccessor.(T) -> R): List<R> {
-        val mysqlDialect = SqlServerDialect()
-        return select(mysqlDialect, mapper)
-    }
-
-    override fun <T : DbSource> Inserter<T>.invoke() {
-        val mysqlDialect = SqlServerDialect()
-        return run(mysqlDialect)
-    }
-
-    override fun <T : DbSource, R> InserterWithRet<T, R>.invoke() {
-        val mysqlDialect = SqlServerDialect()
-        return run(mysqlDialect)
-    }
-
-    override fun Updater.invoke(): Int {
-        val mysqlDialect = SqlServerDialect()
-        return run(mysqlDialect)
-    }
-
-    override fun <T : DbSource> DbTableDescription<T>.delete() {
-        val mysqlDialect = SqlServerDialect()
-        return delete(mysqlDialect)
-    }
-
-    override fun <T : DbSource> FilteredTableDescriptor<T>.delete() {
-        val mysqlDialect = SqlServerDialect()
-        return delete(mysqlDialect)
-    }
-
-    /*
-
-    override fun <T : DbSource> FilteredDbTable<T>.delete() {
-        val mysqlDialect = SqlServerDialect()
-        delete(mysqlDialect)
-    }
-
-    override fun <T : DbSource> DbTableDescription<T>.delete() {
-        val mysqlDialect = SqlServerDialect()
-        delete(mysqlDialect)
-    }
-
-    override fun <T : DbSource> delete(creator: ((TableConfigure.() -> Unit) -> SetRef) -> T) {
-        val mysqlDialect = SqlServerDialect()
-        delete(mysqlDialect, creator)
-    }*/
-}
+class SqlServerEnvironment(connectionString: String, user: String, password: String):
+        GenericDialectEnvironment(
+                CreateConnectionFactory("com.microsoft.sqlserver.jdbc.SQLServerDriver", connectionString, user, password),
+                {SqlServerDialect()})
 
 fun connectSqlServer(connection: String, user: String, password: String, accessor: SqlServerEnvironment.()->Unit) {
     SqlServerEnvironment(connection, user, password).use {

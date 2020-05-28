@@ -41,15 +41,32 @@ class QueryTests {
 						"  `max_floor` int NOT NULL,\n" +
 						"  PRIMARY KEY (`id`)\n" +
 						")")
-				h2.runSql("INSERT INTO `rooms` VALUES\n" +
-						"(1,1,0,2,0,'2017-01-05 13:24:52',20),\n" +
-						"(2,1,0,3,0,'2017-08-12 17:02:33',20),\n" +
-						"(3,1,0,4,0,'2017-12-04 09:47:12',20),\n" +
-						"(4,1,0,5,0,'2018-04-30 15:04:55',20),\n" +
-						"(5,1,0,7,0,'2020-02-04 17:19:49',20)")
-				h2.runSql("INSERT INTO `apartments` VALUES\n" +
-						"(1,'园山街道保安社区简一村龙腾街25-1',22.51124,114.05122,'2017-01-01 0:0:0','2017-01-01 0:0:0',1,1,8),\n" +
-						"(2,'松岗街道东方社区田洋二路1号B801B区',22.51233,114.05302,'2017-02-05 0:0:0','2017-07-05 0:0:0',0,1,20)")
+				h2.run {
+					for (room in roomsData) {
+						db { Rooms(it) }.insert {
+							it.id(room.id)
+							it.apartment(room.apartment)
+							it.type(room.type)
+							it.floor(room.floor)
+							it.sold(room.sold)
+							it.soldTime(room.soldTime)
+							it.capacity(room.capacity)
+						}()
+					}
+					for (apartment in apartmentsData) {
+						db { Apartments(it) }.insert {
+							it.id(apartment.id)
+							it.address(apartment.address)
+							it.lat(apartment.lat)
+							it.lon(apartment.lon)
+							it.buildTime(apartment.buildTime)
+							it.maintenanceTime(apartment.maintenanceTime)
+							it.buildup(apartment.buildup)
+							it.minFloor(apartment.minFloor)
+							it.maxFloor(apartment.maxFloor)
+						}()
+					}
+				}
 			}
 			catch (ex: Throwable) {
 				ex.printStackTrace()

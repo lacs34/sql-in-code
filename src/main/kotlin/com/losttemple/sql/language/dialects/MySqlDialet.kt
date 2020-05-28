@@ -3,6 +3,7 @@ package com.losttemple.sql.language.dialects
 import com.losttemple.sql.language.operator.*
 import com.losttemple.sql.language.types.SqlType
 import com.losttemple.sql.language.wrappers.ConnectionEnvironment
+import java.sql.Connection
 import java.sql.ResultSet
 import java.time.Duration
 import java.util.*
@@ -465,65 +466,97 @@ interface DialectEnvironment: AutoCloseable {
     fun <T: DbSource> delete(creator: ((TableConfigure.()->Unit)-> SetRef)->T)*/
 }
 
-class MySqlEnvironment(connection: String, user: String, password: String):
-        ConnectionEnvironment(connectTo("com.mysql.cj.jdbc.Driver", connection, user, password)), DialectEnvironment {
+interface ConnectionFactory: AutoCloseable {
+    fun <T> connect(handler: (Connection) -> T): T
+}
+
+open class GenericDialectEnvironment(
+        private val connectionCreator: ConnectionFactory,
+        private val dialectCreator: () -> SqlDialect): DialectEnvironment {
     override fun <T, R> DbResult<T>.select(mapper: QueryResultAccessor.(T)->R): List<R> {
-        val mysqlDialect = MySqlDialect()
-        return select(mysqlDialect, mapper)
+        val dialect = dialectCreator()
+        return connectionCreator.connect { select(dialect, it, mapper) }
     }
 
     override operator fun <T> DbInstance<SqlType<T>>.invoke(): T? {
-        val mysqlDialect = MySqlDialect()
-        return invoke(mysqlDialect)
+        val dialect = dialectCreator()
+        return connectionCreator.connect { invoke(dialect, it) }
     }
 
     override fun <T, R> DbInstanceResult<T>.select(mapper: QueryResultAccessor.(T) -> R): List<R> {
-        val mysqlDialect = MySqlDialect()
-        return select(mysqlDialect, mapper)
+        val dialect = dialectCreator()
+        return connectionCreator.connect { select(dialect, it, mapper) }
     }
 
     override fun <T : DbSource> Inserter<T>.invoke() {
-        val mysqlDialect = MySqlDialect()
-        return run(mysqlDialect)
+        val dialect = dialectCreator()
+        return connectionCreator.connect { run(dialect, it) }
     }
 
     override fun <T : DbSource, R> InserterWithRet<T, R>.invoke() {
-        val mysqlDialect = MySqlDialect()
-        return run(mysqlDialect)
+        val dialect = dialectCreator()
+        return connectionCreator.connect { run(dialect, it) }
     }
 
     override fun Updater.invoke(): Int {
-        val mysqlDialect = MySqlDialect()
-        return run(mysqlDialect)
+        val dialect = dialectCreator()
+        return connectionCreator.connect { run(dialect, it) }
     }
 
     override fun <T : DbSource> DbTableDescription<T>.delete() {
-        val mysqlDialect = MySqlDialect()
-        return delete(mysqlDialect)
+        val dialect = dialectCreator()
+        return connectionCreator.connect { delete(dialect, it) }
     }
 
     override fun <T : DbSource> FilteredTableDescriptor<T>.delete() {
-        val mysqlDialect = MySqlDialect()
-        return delete(mysqlDialect)
+        val dialect = dialectCreator()
+        return connectionCreator.connect { delete(dialect, it) }
     }
 
-    /*
-
-    override fun <T : DbSource> FilteredDbTable<T>.delete() {
-        val mysqlDialect = MySqlDialect()
-        delete(mysqlDialect)
+    override fun close() {
+        connectionCreator.close()
     }
 
-    override fun <T : DbSource> DbTableDescription<T>.delete() {
-        val mysqlDialect = MySqlDialect()
-        delete(mysqlDialect)
+    fun runSql(sql: String) {
+        connectionCreator.connect { connection ->
+            connection.prepareStatement(sql).use {
+                it.execute()
+            }
+        }
     }
-
-    override fun <T : DbSource> delete(creator: ((TableConfigure.() -> Unit) -> SetRef) -> T) {
-        val mysqlDialect = MySqlDialect()
-        delete(mysqlDialect, creator)
-    }*/
 }
+
+class MonopolyConnectionFactory(private val connection: Connection): ConnectionFactory {
+    override fun <T> connect(handler: (Connection) -> T): T {
+        return handler(connection)
+    }
+
+    override fun close() {
+        connection.close()
+    }
+}
+
+class CreateConnectionFactory private constructor(private val connection: Connection):
+        ConnectionFactory {
+    constructor(driver: String, connectionString: String):
+            this(connectTo(driver, connectionString))
+
+    constructor(driver: String, connectionString: String, user: String, password: String):
+            this(connectTo(driver, connectionString, user, password))
+
+    override fun <T> connect(handler: (Connection) -> T): T {
+        return handler(connection)
+    }
+
+    override fun close() {
+        connection.close()
+    }
+}
+
+class MySqlEnvironment(connectionString: String, user: String, password: String):
+        GenericDialectEnvironment(
+                CreateConnectionFactory("com.mysql.cj.jdbc.Driver", connectionString, user, password),
+                {MySqlDialect()})
 
 fun connectMySql(connection: String, user: String, password: String, accessor: MySqlEnvironment.()->Unit) {
     MySqlEnvironment(connection, user, password).use {

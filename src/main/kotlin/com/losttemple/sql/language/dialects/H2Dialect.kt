@@ -430,65 +430,11 @@ class H2Dialect: SqlDialect {
     }
 }
 
+
 class H2Environment(database: String):
-        ConnectionEnvironment(connectTo("org.h2.Driver", "jdbc:h2:mem:~/$database;MODE=MySQL")), DialectEnvironment {
-    override fun <T, R> DbResult<T>.select(mapper: QueryResultAccessor.(T)->R): List<R> {
-        val mysqlDialect = H2Dialect()
-        return select(mysqlDialect, mapper)
-    }
-
-    override operator fun <T> DbInstance<SqlType<T>>.invoke(): T? {
-        val mysqlDialect = H2Dialect()
-        return invoke(mysqlDialect)
-    }
-
-    override fun <T, R> DbInstanceResult<T>.select(mapper: QueryResultAccessor.(T) -> R): List<R> {
-        val mysqlDialect = H2Dialect()
-        return select(mysqlDialect, mapper)
-    }
-
-    override fun <T : DbSource> Inserter<T>.invoke() {
-        val mysqlDialect = H2Dialect()
-        return run(mysqlDialect)
-    }
-
-    override fun <T : DbSource, R> InserterWithRet<T, R>.invoke() {
-        val mysqlDialect = H2Dialect()
-        return run(mysqlDialect)
-    }
-
-    override fun Updater.invoke(): Int {
-        val mysqlDialect = H2Dialect()
-        return run(mysqlDialect)
-    }
-
-    override fun <T : DbSource> DbTableDescription<T>.delete() {
-        val mysqlDialect = H2Dialect()
-        return delete(mysqlDialect)
-    }
-
-    override fun <T : DbSource> FilteredTableDescriptor<T>.delete() {
-        val mysqlDialect = H2Dialect()
-        return delete(mysqlDialect)
-    }
-
-    /*
-
-    override fun <T : DbSource> FilteredDbTable<T>.delete() {
-        val mysqlDialect = H2Dialect()
-        delete(mysqlDialect)
-    }
-
-    override fun <T : DbSource> DbTableDescription<T>.delete() {
-        val mysqlDialect = H2Dialect()
-        delete(mysqlDialect)
-    }
-
-    override fun <T : DbSource> delete(creator: ((TableConfigure.() -> Unit) -> SetRef) -> T) {
-        val mysqlDialect = H2Dialect()
-        delete(mysqlDialect, creator)
-    }*/
-}
+        GenericDialectEnvironment(
+                CreateConnectionFactory("org.h2.Driver", "jdbc:h2:mem:~/$database;MODE=MySQL"),
+                {H2Dialect()})
 
 fun connectH2(database: String, accessor: H2Environment.()->Unit) {
     H2Environment(database).use {

@@ -31,3 +31,7 @@ fun <T: Any> DbInstance<T>.useAll(): DbInstanceResult<T> {
         }
     }
 }
+
+fun <T: Any, S: DbSource> DbTableDescription<S>.insertObject(obj: T) {
+
+}
