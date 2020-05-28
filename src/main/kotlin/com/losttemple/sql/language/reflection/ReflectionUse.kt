@@ -87,6 +87,13 @@ fun <T: Any, S: DbSource> DbTableDescription<S>.insertObject(
     }
 }
 
+fun <T: Any, S: DbSource> DbTableDescription<S>.insertObjectNotNull(
+        obj: T): Inserter<S> {
+    return insertObjectWithPropertyFilter(obj) { assign ->
+        assign.sourceValue != null
+    }
+}
+
 data class RetPropertyAssign<SC: DbSource, TC>(
         val sourceProperty: KProperty<SourceColumn<*>>,
         val sourceValue: SourceColumn<*>,
@@ -156,6 +163,91 @@ fun <S: DbSource, R: Any> Inserter<S>.retWithPropertyFilter(
 fun <S: DbSource, R: Any> Inserter<S>.retObject(
         target: R): InserterWithRet<S, R> {
     return retWithPropertyFilter(target) { _ ->
+        true
+    }
+}
+
+fun <T: Any, S: DbSource> DbTableDescription<S>.updateObjectWithPropertyFilter(
+        obj: T,
+        propertyFilter: (PropertyAssign<T, S>) -> Boolean): Updater {
+    val set = source.reference.set as SourceSet
+    val environment = DbUpdateEnvironment(set.name, null)
+
+    val sourceClass = source.javaClass.kotlin
+    val sourceProperties = sourceClass.declaredMemberProperties.associateBy { it.name }
+    val objClass = obj.javaClass.kotlin
+    objClass.declaredMemberProperties.forEach {
+        val propertyName = it.name
+        val relatedSourceProperty = sourceProperties[propertyName]
+        if (relatedSourceProperty != null) {
+            val sourceProperty = relatedSourceProperty.get(source) as? SourceColumn<*>?
+            if (sourceProperty != null) {
+                val objProperty = it.get(obj)
+                @Suppress("UNCHECKED_CAST")
+                val assign = PropertyAssign<T, S>(
+                        it,
+                        objProperty,
+                        obj,
+                        relatedSourceProperty as KProperty1<S, SourceColumn<*>>,
+                        sourceProperty,
+                        source)
+                if (propertyFilter(assign))
+                    environment.apply {
+                        @Suppress("UNCHECKED_CAST")
+                        (sourceProperty as SourceColumn<Any?>)(objProperty)
+                    }
+            }
+        }
+    }
+    return Updater(environment)
+}
+
+fun <T: Any, S: DbSource> DbTableDescription<S>.updateObject(
+        obj: T): Updater {
+    return updateObjectWithPropertyFilter(obj) { _ ->
+        true
+    }
+}
+
+
+fun <T: Any, S: DbSource> FilteredTableDescriptor<S>.updateObjectWithPropertyFilter(
+        obj: T,
+        propertyFilter: (PropertyAssign<T, S>) -> Boolean): Updater {
+    val set = description.reference.set as SourceSet
+    val environment = DbUpdateEnvironment(set.name, null)
+
+    val sourceClass = description.javaClass.kotlin
+    val sourceProperties = sourceClass.declaredMemberProperties.associateBy { it.name }
+    val objClass = obj.javaClass.kotlin
+    objClass.declaredMemberProperties.forEach {
+        val propertyName = it.name
+        val relatedSourceProperty = sourceProperties[propertyName]
+        if (relatedSourceProperty != null) {
+            val sourceProperty = relatedSourceProperty.get(description) as? SourceColumn<*>?
+            if (sourceProperty != null) {
+                val objProperty = it.get(obj)
+                @Suppress("UNCHECKED_CAST")
+                val assign = PropertyAssign<T, S>(
+                        it,
+                        objProperty,
+                        obj,
+                        relatedSourceProperty as KProperty1<S, SourceColumn<*>>,
+                        sourceProperty,
+                        description)
+                if (propertyFilter(assign))
+                    environment.apply {
+                        @Suppress("UNCHECKED_CAST")
+                        (sourceProperty as SourceColumn<Any?>)(objProperty)
+                    }
+            }
+        }
+    }
+    return Updater(environment)
+}
+
+fun <T: Any, S: DbSource> FilteredTableDescriptor<S>.updateObject(
+        obj: T): Updater {
+    return updateObjectWithPropertyFilter(obj) { _ ->
         true
     }
 }
