@@ -2,6 +2,8 @@ package com.losttemple.testdb
 
 import com.losttemple.sql.language.dialects.H2Environment
 import com.losttemple.sql.language.operator.*
+import com.losttemple.sql.language.reflection.insertObject
+import com.losttemple.sql.language.reflection.retObject
 import com.losttemple.sql.language.reflection.useAll
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeAll
@@ -43,15 +45,7 @@ class QueryTests {
 						")")
 				h2.run {
 					for (room in roomsData) {
-						db { Rooms(it) }.insert {
-							it.id(room.id)
-							it.apartment(room.apartment)
-							it.type(room.type)
-							it.floor(room.floor)
-							it.sold(room.sold)
-							it.soldTime(room.soldTime)
-							it.capacity(room.capacity)
-						}()
+						db { Rooms(it) }.insertObject(room)()
 					}
 					for (apartment in apartmentsData) {
 						db { Apartments(it) }.insert {
@@ -157,13 +151,12 @@ class QueryTests {
 	@Test
 	fun insertWithReturn() {
 		var x: Int? = 0
+		val retValue = MutableRoom()
 		val result = h2.run {
 			db { Rooms(it) }.insert {
 				it.floor(3)
 				it.soldTime(Date())
-			}.ret {
-				x = it.id()
-			}()
+			}.retObject(retValue)()
 		}
 	}
 

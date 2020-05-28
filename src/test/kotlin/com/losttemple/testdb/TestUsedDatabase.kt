@@ -35,6 +35,16 @@ val roomsData = listOf<Room>(
         Room(5,1,0,7,false, Date(2020 - 1900, 2 - 1, 4, 17, 19, 49),20)
 )
 
+class MutableRoom {
+    var id: Int? = null
+    var apartment: Int? = null
+    var type: Int? = null
+    var floor: Int? = null
+    var sold: Boolean? = null
+    var soldTime: Date? = null
+    var capacity: Int? = null
+}
+
 class Apartments(set: (TableConfigure.()->Unit)-> SetRef) :
         DbSource(set { tableName("apartments") }) {
     var id = intColumn("id")

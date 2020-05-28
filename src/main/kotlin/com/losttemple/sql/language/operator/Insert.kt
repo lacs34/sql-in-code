@@ -236,7 +236,7 @@ class DbInsertionEnvironment(table: String) {
     }
 }
 
-class Inserter<T: DbSource>(private val environment: DbInsertionEnvironment, private val descriptor: T) {
+class Inserter<T: DbSource>(private val environment: DbInsertionEnvironment, val descriptor: T) {
     fun run(machine: SqlDialect, connection: Connection) {
         environment.execute(machine, connection)
     }
@@ -246,7 +246,7 @@ class Inserter<T: DbSource>(private val environment: DbInsertionEnvironment, pri
     }
 }
 
-class InsertRetEnvironment(private val result: ResultSet, private val dialect: SqlDialect) {
+class InsertRetEnvironment(val result: ResultSet, private val dialect: SqlDialect) {
     fun <T> get(value: SourceColumn<T>): T? {
         val name = value.name
         return value.getFromResult(dialect, result, name)
@@ -273,17 +273,11 @@ class InserterWithRet<T: DbSource, R>(
         environment.fillContext(context)
         println(machine.sql.describe())
         machine.sql.prepareWithGeneratedKeys(connection).use { statement ->
-            {
-
-                statement.executeUpdate()
-                statement.generatedKeys.use { result ->
-                    {
-
-                        result.next()
-                        val retEnvironment = InsertRetEnvironment(result, machine)
-                        retEnvironment.retValue(descriptor)
-                    }
-                }
+            statement.executeUpdate()
+            statement.generatedKeys.use { result ->
+                result.next()
+                val retEnvironment = InsertRetEnvironment(result, machine)
+                retEnvironment.retValue(descriptor)
             }
         }
     }
