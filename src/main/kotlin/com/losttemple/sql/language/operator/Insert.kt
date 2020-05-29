@@ -262,6 +262,22 @@ class InsertRetEnvironment(val result: ResultSet, private val dialect: SqlDialec
         val name = name
         return this.getFromResult(dialect, result, name)
     }
+
+    fun <T> getByName(name: String, retriever: (dialect: SqlDialect, result: ResultSet, name: String) -> T?): T? {
+        return retriever(dialect, result, name)
+    }
+}
+
+fun InsertRetEnvironment.getIntByName(name: String): Int? {
+    return getByName(name) { _, result, vname ->
+        result.getInt(vname)
+    }
+}
+
+fun InsertRetEnvironment.getStringByName(name: String): String? {
+    return getByName(name) { _, result, vname ->
+        result.getString(vname)
+    }
 }
 
 class InserterWithRet<T: DbSource, R>(

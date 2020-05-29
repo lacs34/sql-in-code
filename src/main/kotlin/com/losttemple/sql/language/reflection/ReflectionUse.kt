@@ -209,7 +209,6 @@ fun <T: Any, S: DbSource> DbTableDescription<S>.updateObject(
     }
 }
 
-
 fun <T: Any, S: DbSource> FilteredTableDescriptor<S>.updateObjectWithPropertyFilter(
         obj: T,
         propertyFilter: (PropertyAssign<T, S>) -> Boolean): Updater {
