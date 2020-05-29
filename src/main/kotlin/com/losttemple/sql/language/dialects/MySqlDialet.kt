@@ -456,7 +456,7 @@ interface DialectEnvironment: AutoCloseable {
     operator fun <T> DbInstance<SqlType<T>>.invoke(): T?
     fun <T, R> DbInstanceResult<T>.select(mapper: QueryResultAccessor.(T)->R): List<R>
     operator fun <T: DbSource> Inserter<T>.invoke()
-    operator fun <T: DbSource, R> InserterWithRet<T, R>.invoke()
+    operator fun <T: DbSource, R> InserterWithRet<T, R>.invoke(): R
     operator fun Updater.invoke(): Int
     fun <T: DbSource> DbTableDescription<T>.delete()
     fun <T: DbSource> FilteredTableDescriptor<T>.delete()
@@ -493,7 +493,7 @@ open class GenericDialectEnvironment(
         return connectionCreator.connect { run(dialect, it) }
     }
 
-    override fun <T : DbSource, R> InserterWithRet<T, R>.invoke() {
+    override fun <T : DbSource, R> InserterWithRet<T, R>.invoke(): R {
         val dialect = dialectCreator()
         return connectionCreator.connect { run(dialect, it) }
     }

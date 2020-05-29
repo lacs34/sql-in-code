@@ -284,11 +284,11 @@ class InserterWithRet<T: DbSource, R>(
         private val environment: DbInsertionEnvironment,
         private val retValue: InsertRetEnvironment.(T) -> R,
         private val descriptor: T) {
-    fun run(machine: SqlDialect, connection: Connection) {
+    fun run(machine: SqlDialect, connection: Connection): R {
         val context = EvaluateContext(machine, CountIdGenerator(), mapOf(), mapOf())
         environment.fillContext(context)
         println(machine.sql.describe())
-        machine.sql.prepareWithGeneratedKeys(connection).use { statement ->
+        return machine.sql.prepareWithGeneratedKeys(connection).use { statement ->
             statement.executeUpdate()
             statement.generatedKeys.use { result ->
                 result.next()
