@@ -454,6 +454,11 @@ class HashDialect: SqlDialect {
         push("$source ORDER BY $key DESC", source, key)
     }
 
+    override fun limitWithOffset(count: Int, offset: Int) {
+        val source = pop()
+        push("$source LIMIT $count OFFSET $offset", source)
+    }
+
     override fun limit(count: Int) {
         val source = pop()
         push("$source LIMIT $count", source)

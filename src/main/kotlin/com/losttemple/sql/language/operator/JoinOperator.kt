@@ -1,9 +1,6 @@
 package com.losttemple.sql.language.operator
 
-import com.losttemple.sql.language.generate.ExpressionConstructor
-import com.losttemple.sql.language.generate.GroupStatus
-import com.losttemple.sql.language.generate.OrderStatus
-import com.losttemple.sql.language.generate.SourceReference
+import com.losttemple.sql.language.generate.*
 import com.losttemple.sql.language.types.*
 
 
@@ -51,12 +48,12 @@ class JoinOnlySet(private val left: SqlSet, private val right: SqlSet, private v
     override fun push(constructor: SourceReference) {
         left.push(constructor)
         if (!constructor.whereAlwaysTrue || constructor.groupStatus != GroupStatus.None ||
-                constructor.orderStatus != OrderStatus.None || constructor.hasLimit) {
+                constructor.orderStatus != OrderStatus.None || constructor.limitStatus != LimitStatus.None) {
             constructor.turnToEmbed()
         }
         right.push(constructor)
         if (!constructor.whereAlwaysTrue || constructor.groupStatus != GroupStatus.None ||
-                constructor.orderStatus != OrderStatus.None || constructor.hasLimit) {
+                constructor.orderStatus != OrderStatus.None || constructor.limitStatus != LimitStatus.None) {
             constructor.turnToEmbed()
         }
         when (type) {
@@ -86,12 +83,12 @@ class JoinResultSet(private val left: SqlSet, private val right: SqlSet, private
     override fun push(constructor: SourceReference) {
         left.push(constructor)
         if (!constructor.whereAlwaysTrue || constructor.groupStatus != GroupStatus.None ||
-                constructor.orderStatus != OrderStatus.None || constructor.hasLimit) {
+                constructor.orderStatus != OrderStatus.None || constructor.limitStatus != LimitStatus.None) {
             constructor.turnToEmbed()
         }
         right.push(constructor)
         if (!constructor.whereAlwaysTrue || constructor.groupStatus != GroupStatus.None ||
-                constructor.orderStatus != OrderStatus.None || constructor.hasLimit) {
+                constructor.orderStatus != OrderStatus.None || constructor.limitStatus != LimitStatus.None) {
             constructor.turnToEmbed()
         }
         when (type) {

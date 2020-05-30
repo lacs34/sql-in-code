@@ -56,7 +56,7 @@ class FilteredSet<T>(private val sourceSet: DbSet<T>): DbSet<T>, SqlSet {
 
     override fun push(constructor: SourceReference) {
         sourceSet.set.push(constructor)
-        if (constructor.hasLimit || constructor.orderStatus != OrderStatus.None) {
+        if (constructor.limitStatus != LimitStatus.None || constructor.orderStatus != OrderStatus.None) {
             embedContract(constructor, constructor.where) {
                 condition.push(this)
             }

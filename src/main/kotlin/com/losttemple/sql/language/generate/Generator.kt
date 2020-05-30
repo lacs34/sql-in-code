@@ -22,14 +22,22 @@ enum class OrderStatus {
     Descending
 }
 
+enum class LimitStatus {
+    None,
+    Limit,
+    LimitWithOffset
+}
+
 interface SourceReference {
     val from: SourceConstructor
     val where: ExpressionConstructor
     val whereAlwaysTrue: Boolean
     val having: ExpressionConstructor
     val havingAlwaysTrue: Boolean
+    val offset: Int
     var limit: Int
-    val hasLimit: Boolean
+    val limitStatus: LimitStatus
+    fun limitWithOffset(limit: Int, offset: Int)
     val group: ExpressionConstructor
     fun aggregate()
     val groupStatus: GroupStatus

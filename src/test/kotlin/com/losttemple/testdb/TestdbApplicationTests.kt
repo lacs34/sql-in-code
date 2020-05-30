@@ -139,6 +139,19 @@ class QueryTests {
 	}
 
 	@Test
+	fun limitWithOffset() {
+		val result = h2.run {
+			from { Rooms(it) }.limit(2).offset(1).useAll().select {
+				object {
+					val floor = it.floor()
+					val capacity = it.capacity()
+				}
+			}
+		}
+		assert(true)
+	}
+
+	@Test
 	fun basicInsert() {
 		val result = h2.run {
 			db { Rooms(it) }.insert {

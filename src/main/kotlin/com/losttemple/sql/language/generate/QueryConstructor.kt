@@ -21,8 +21,9 @@ class DefaultQueryConstructor(private val parent: DefaultQueryConstructor?, priv
     private var source: DefaultSourceConstructor = DefaultSourceConstructor(this)
     private var whereConstructor = DefaultExpressionConstructor(this, null)
     private var havingConstructor = DefaultExpressionConstructor(this, null)
+    private var skipCount = 0
     private var limitCount = 0
-    private var isLimit = false
+    private var limitStatusValue = LimitStatus.None
     private var groupKey = DefaultExpressionConstructor(this, null)
     private var isAggregate = false
     private var orderKey = DefaultExpressionConstructor(this, null)
@@ -80,15 +81,24 @@ class DefaultQueryConstructor(private val parent: DefaultQueryConstructor?, priv
     override val havingAlwaysTrue: Boolean
         get() = havingConstructor.isEmpty()
 
+    override val offset: Int
+        get() = skipCount
+
     override var limit: Int
         get() = limitCount
         set(value) {
-            isLimit = true
+            limitStatusValue = LimitStatus.Limit
             limitCount = value
         }
 
-    override val hasLimit: Boolean
-        get() = isLimit
+    override val limitStatus: LimitStatus
+        get() = limitStatusValue
+
+    override fun limitWithOffset(limit: Int, offset: Int) {
+        limitStatusValue = LimitStatus.LimitWithOffset
+        limitCount = limit
+        skipCount = offset
+    }
 
     override val group: ExpressionConstructor
         get() = groupKey
@@ -134,10 +144,14 @@ class DefaultQueryConstructor(private val parent: DefaultQueryConstructor?, priv
             embedQuery.orderStatus = orderStatus
             orderStatus = OrderStatus.None
         }
-        if (isLimit) {
-            embedQuery.limit = limitCount
-            limit = 0
-            isLimit = false
+        when (limitStatusValue) {
+            LimitStatus.Limit -> {
+                embedQuery.limit = limitCount
+            }
+            LimitStatus.LimitWithOffset -> {
+                embedQuery.limitWithOffset(limitCount, skipCount)
+            }
+            else -> { }
         }
         return embedQuery
     }
@@ -181,8 +195,14 @@ class DefaultQueryConstructor(private val parent: DefaultQueryConstructor?, priv
                 dialect.orderDesc()
             }
         }
-        if (isLimit) {
-            dialect.limit(limitCount)
+        when (limitStatus) {
+            LimitStatus.Limit -> {
+                dialect.limit(limitCount)
+            }
+            LimitStatus.LimitWithOffset -> {
+                dialect.limitWithOffset(limitCount, skipCount)
+            }
+            else -> { }
         }
         return dialect.hash()
     }
@@ -233,8 +253,14 @@ class DefaultQueryConstructor(private val parent: DefaultQueryConstructor?, priv
                 dialect.orderDesc()
             }
         }
-        if (isLimit) {
-            dialect.limit(limitCount)
+        when (limitStatus) {
+            LimitStatus.Limit -> {
+                dialect.limit(limitCount)
+            }
+            LimitStatus.LimitWithOffset -> {
+                dialect.limitWithOffset(limitCount, skipCount)
+            }
+            else -> { }
         }
         dialect.columnList()
         var first = true
@@ -334,8 +360,14 @@ class DefaultQueryConstructor(private val parent: DefaultQueryConstructor?, priv
                 dialect.orderDesc()
             }
         }
-        if (isLimit) {
-            dialect.limit(limitCount)
+        when (limitStatus) {
+            LimitStatus.Limit -> {
+                dialect.limit(limitCount)
+            }
+            LimitStatus.LimitWithOffset -> {
+                dialect.limitWithOffset(limitCount, skipCount)
+            }
+            else -> { }
         }
         dialect.columnList()
         var first = true

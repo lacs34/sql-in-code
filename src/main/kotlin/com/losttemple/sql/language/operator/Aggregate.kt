@@ -7,7 +7,7 @@ import java.sql.ResultSet
 class AggregateSet<T>(private val sourceSet: DbSet<T>): SqlSet {
     override fun push(constructor: SourceReference) {
         sourceSet.set.push(constructor)
-        if (constructor.groupStatus != GroupStatus.None || constructor.hasLimit) {
+        if (constructor.groupStatus != GroupStatus.None || constructor.limitStatus != LimitStatus.None) {
             constructor.turnToEmbed()
             constructor.aggregate()
         }

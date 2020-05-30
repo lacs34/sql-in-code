@@ -18,7 +18,7 @@ class GroupSet<T, K>(private val sourceSet: DbSet<T>): DbSet<T>, SqlSet {
 
     override fun push(constructor: SourceReference) {
         sourceSet.set.push(constructor)
-        if (constructor.groupStatus != GroupStatus.None || constructor.hasLimit) {
+        if (constructor.groupStatus != GroupStatus.None || constructor.limitStatus != LimitStatus.None) {
             embedContract(constructor, constructor.group) {
                 for (key in keys) {
                     key.push(this)

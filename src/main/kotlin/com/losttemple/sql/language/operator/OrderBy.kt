@@ -1,5 +1,6 @@
 package com.losttemple.sql.language.operator
 
+import com.losttemple.sql.language.generate.LimitStatus
 import com.losttemple.sql.language.generate.OrderStatus
 import com.losttemple.sql.language.generate.SourceReference
 import com.losttemple.sql.language.generate.withContract
@@ -18,7 +19,7 @@ class OrderSet<T, K: Comparable<K>>(private val sourceSet: DbSet<T>, private val
 
     override fun push(constructor: SourceReference) {
         sourceSet.set.push(constructor)
-        if (constructor.hasLimit) {
+        if (constructor.limitStatus != LimitStatus.None) {
             embedContract(constructor, constructor.order) {
                 for (key in keys) {
                     key.push(this)

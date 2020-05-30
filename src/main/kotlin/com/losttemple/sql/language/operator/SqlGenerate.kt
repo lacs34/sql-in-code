@@ -53,6 +53,7 @@ interface SqlDialect {
     fun deleteAll(name: String)
     fun order()
     fun orderDesc()
+    fun limitWithOffset(count: Int, offset: Int)
     fun limit(count: Int)
     fun group()
     val sql: JdbcSqlSegment
