@@ -3,11 +3,11 @@ package com.losttemple.sql.language.dialects
 import com.losttemple.sql.language.operator.*
 import com.losttemple.sql.language.types.SqlType
 import com.losttemple.sql.language.wrappers.ConnectionEnvironment
-import java.sql.Connection
-import java.sql.PreparedStatement
-import java.sql.ResultSet
+import java.math.BigInteger
+import java.sql.*
 import java.time.Duration
 import java.util.*
+import java.util.Date
 
 data class JdbcSqlserverSegment(val sql: String, val limit: Int, val parameters: List<JdbcSqlParameter>) {
     fun prepare(connection: Connection): PreparedStatement {
@@ -97,7 +97,7 @@ class SqlServerDialect: SqlDialect {
         push("[$table].[$name]")
     }
 
-    override fun constance(value: Int?) {
+    override fun constance(value: BigInteger?) {
         push("?", 0, JdbcIntParameter(value))
     }
 
@@ -105,8 +105,16 @@ class SqlServerDialect: SqlDialect {
         push("?", 0, JdbcStringParameter(value))
     }
 
-    override fun constance(value: Date?) {
+    override fun constance(value: java.sql.Date?) {
+        push("?", 0, JdbcDateParameter(value))
+    }
+
+    override fun constance(value: Time?) {
         push("?", 0, JdbcTimeParameter(value))
+    }
+
+    override fun constance(value: Timestamp?) {
+        push("?", 0, JdbcTimestampParameter(value))
     }
 
     override fun constance(value: Boolean?) {
@@ -425,8 +433,43 @@ class SqlServerDialect: SqlDialect {
     override val sql: JdbcSqlSegment
         get() = stack.first().run { JdbcSqlSegment(sql, parameters) }
 
+    override fun byteResult(result: ResultSet, name: String): Byte? {
+        val value = result.getByte(name)
+        val isNull = result.wasNull()
+        if (isNull) {
+            return null
+        }
+        return value
+    }
+
+    override fun shortResult(result: ResultSet, name: String): Short? {
+        val value = result.getShort(name)
+        val isNull = result.wasNull()
+        if (isNull) {
+            return null
+        }
+        return value
+    }
+
     override fun intResult(result: ResultSet, name: String): Int? {
         val value = result.getInt(name)
+        val isNull = result.wasNull()
+        if (isNull) {
+            return null
+        }
+        return value
+    }
+    override fun longResult(result: ResultSet, name: String): Long? {
+        val value = result.getLong(name)
+        val isNull = result.wasNull()
+        if (isNull) {
+            return null
+        }
+        return value
+    }
+
+    override fun bigIntResult(result: ResultSet, name: String): BigInteger? {
+        val value = result.getBigDecimal(name).toBigInteger()
         val isNull = result.wasNull()
         if (isNull) {
             return null

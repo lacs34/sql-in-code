@@ -3,7 +3,10 @@ package com.losttemple.sql.language.dialects
 import com.losttemple.sql.language.operator.*
 import com.losttemple.sql.language.types.SqlType
 import com.losttemple.sql.language.wrappers.ConnectionEnvironment
+import java.math.BigInteger
 import java.sql.ResultSet
+import java.sql.Time
+import java.sql.Timestamp
 import java.time.Duration
 import java.util.*
 import kotlin.collections.ArrayList
@@ -67,7 +70,7 @@ class H2Dialect: SqlDialect {
         push("`$table`.`$name`")
     }
 
-    override fun constance(value: Int?) {
+    override fun constance(value: BigInteger?) {
         push("?", JdbcIntParameter(value))
     }
 
@@ -75,8 +78,16 @@ class H2Dialect: SqlDialect {
         push("?", JdbcStringParameter(value))
     }
 
-    override fun constance(value: Date?) {
+    override fun constance(value: java.sql.Date?) {
+        push("?", JdbcDateParameter(value))
+    }
+
+    override fun constance(value: Time?) {
         push("?", JdbcTimeParameter(value))
+    }
+
+    override fun constance(value: Timestamp?) {
+        push("?", JdbcTimestampParameter(value))
     }
 
     override fun constance(value: Boolean?) {
@@ -389,8 +400,43 @@ class H2Dialect: SqlDialect {
     override val sql: JdbcSqlSegment
         get() = stack.first()
 
+    override fun byteResult(result: ResultSet, name: String): Byte? {
+        val value = result.getByte(name)
+        val isNull = result.wasNull()
+        if (isNull) {
+            return null
+        }
+        return value
+    }
+
+    override fun shortResult(result: ResultSet, name: String): Short? {
+        val value = result.getShort(name)
+        val isNull = result.wasNull()
+        if (isNull) {
+            return null
+        }
+        return value
+    }
+
     override fun intResult(result: ResultSet, name: String): Int? {
         val value = result.getInt(name)
+        val isNull = result.wasNull()
+        if (isNull) {
+            return null
+        }
+        return value
+    }
+    override fun longResult(result: ResultSet, name: String): Long? {
+        val value = result.getLong(name)
+        val isNull = result.wasNull()
+        if (isNull) {
+            return null
+        }
+        return value
+    }
+
+    override fun bigIntResult(result: ResultSet, name: String): BigInteger? {
+        val value = result.getBigDecimal(name).toBigInteger()
         val isNull = result.wasNull()
         if (isNull) {
             return null

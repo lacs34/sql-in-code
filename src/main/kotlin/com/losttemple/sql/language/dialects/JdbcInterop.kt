@@ -1,5 +1,6 @@
 package com.losttemple.sql.language.dialects
 
+import java.math.BigInteger
 import java.sql.*
 import java.util.*
 import java.util.Date
@@ -8,13 +9,13 @@ interface JdbcSqlParameter {
     fun setParam(jdbc: PreparedStatement, index: Int)
 }
 
-class JdbcIntParameter(private val value: Int?): JdbcSqlParameter {
+class JdbcIntParameter(private val value: BigInteger?): JdbcSqlParameter {
     override fun setParam(jdbc: PreparedStatement, index: Int) {
         if (value == null) {
             jdbc.setNull(index, Types.INTEGER)
         }
         else {
-            jdbc.setInt(index, value)
+            jdbc.setLong(index, value.toLong())
         }
     }
 
@@ -38,18 +39,48 @@ class JdbcStringParameter(private val value: String?): JdbcSqlParameter {
     }
 }
 
-class JdbcTimeParameter(private val value: Date?): JdbcSqlParameter {
+class JdbcTimeParameter(private val value: Time?): JdbcSqlParameter {
     override fun setParam(jdbc: PreparedStatement, index: Int) {
         if (value == null) {
             jdbc.setNull(index, Types.TIME)
         }
         else {
-            jdbc.setTimestamp(index, Timestamp(value.time))
+            jdbc.setTime(index, value)
         }
     }
 
     override fun toString(): String {
         return "Time: $value"
+    }
+}
+
+class JdbcDateParameter(private val value: java.sql.Date?): JdbcSqlParameter {
+    override fun setParam(jdbc: PreparedStatement, index: Int) {
+        if (value == null) {
+            jdbc.setNull(index, Types.TIME)
+        }
+        else {
+            jdbc.setDate(index, value)
+        }
+    }
+
+    override fun toString(): String {
+        return "Date: $value"
+    }
+}
+
+class JdbcTimestampParameter(private val value: Timestamp?): JdbcSqlParameter {
+    override fun setParam(jdbc: PreparedStatement, index: Int) {
+        if (value == null) {
+            jdbc.setNull(index, Types.TIME)
+        }
+        else {
+            jdbc.setTimestamp(index, value)
+        }
+    }
+
+    override fun toString(): String {
+        return "Timestamp: $value"
     }
 }
 

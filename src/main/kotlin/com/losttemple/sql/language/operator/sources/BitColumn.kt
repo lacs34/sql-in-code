@@ -7,9 +7,10 @@ import com.losttemple.sql.language.operator.SqlParameter
 import com.losttemple.sql.language.types.SetRef
 import com.losttemple.sql.language.types.SqlBool
 import com.losttemple.sql.language.types.SqlInt
+import java.math.BigInteger
 import java.sql.Types
 
-abstract class CommonColumn<T, R>(private val setReference: SetRef,
+abstract class CommonColumn<T, R>(protected val setReference: SetRef,
                                override val name: String): SqlSourceColumn<T> {
     protected var isNullable: Boolean = false
         private set
@@ -33,6 +34,7 @@ abstract class CommonColumn<T, R>(private val setReference: SetRef,
     }
 
     fun toActual(): R {
+        @Suppress("UNCHECKED_CAST")
         return this as R
     }
 
@@ -47,11 +49,11 @@ abstract class CommonColumn<T, R>(private val setReference: SetRef,
     }
 }
 
-class BitAsIntColumn(private val setReference: SetRef, name: String):
+class BitAsIntColumn(setReference: SetRef, name: String):
         SqlInt,
         CommonColumn<Int, BitAsIntColumn>(setReference, name) {
     override fun generateParameter(parameter: Int?): SqlParameter {
-        return IntSqlParameter(parameter)
+        return IntSqlParameter(parameter?.toBigInteger())
     }
 
     override val typeDescription: SqlTypeDescription
@@ -60,16 +62,16 @@ class BitAsIntColumn(private val setReference: SetRef, name: String):
         }
 }
 
-class BitAsBoolColumn(private val setReference: SetRef, name: String):
+class BitAsBoolColumn(setReference: SetRef, name: String):
         SqlBool,
         CommonColumn<Boolean, BitAsIntColumn>(setReference, name) {
     override fun generateParameter(parameter: Boolean?): SqlParameter {
         val notNull = parameter ?: return IntSqlParameter(null)
         return if (notNull) {
-            IntSqlParameter(1)
+            IntSqlParameter(1.toBigInteger())
         }
         else {
-            IntSqlParameter(0)
+            IntSqlParameter(0.toBigInteger())
         }
     }
 

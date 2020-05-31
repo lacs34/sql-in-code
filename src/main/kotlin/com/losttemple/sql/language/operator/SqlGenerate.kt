@@ -3,8 +3,11 @@ package com.losttemple.sql.language.operator
 import com.losttemple.sql.language.dialects.JdbcSqlSegment
 import com.losttemple.sql.language.generate.*
 import com.losttemple.sql.language.types.*
+import java.math.BigInteger
 import java.sql.Connection
 import java.sql.ResultSet
+import java.sql.Time
+import java.sql.Timestamp
 import java.time.Duration
 import java.util.*
 import kotlin.collections.ArrayList
@@ -16,9 +19,11 @@ interface SqlDialect {
     fun having()
     fun column(name: String)
     fun column(table: String, name: String)
-    fun constance(value: Int?)
+    fun constance(value: BigInteger?)
     fun constance(value: String?)
-    fun constance(value: Date?)
+    fun constance(value: java.sql.Date?)
+    fun constance(value: Time?)
+    fun constance(value: Timestamp?)
     fun constance(value: Boolean?)
     fun constance(value: Double?)
     fun columnList()
@@ -58,9 +63,31 @@ interface SqlDialect {
     fun group()
     val sql: JdbcSqlSegment
 
-    fun intResult(result: ResultSet, name: String): Int?
+    fun byteResult(result: ResultSet, name: String): Byte? {
+        return result.getByte(name)
+    }
+    fun shortResult(result: ResultSet, name: String): Short? {
+        return result.getShort(name)
+    }
+    fun intResult(result: ResultSet, name: String): Int? {
+        return result.getInt(name)
+    }
+    fun longResult(result: ResultSet, name: String): Long? {
+        return result.getLong(name)
+    }
+    fun bigIntResult(result: ResultSet, name: String): BigInteger? {
+        return result.getBigDecimal(name).toBigInteger()
+    }
     fun stringResult(result: ResultSet, name: String): String?
-    fun dateResult(result: ResultSet, name: String): Date?
+    fun dateResult(result: ResultSet, name: String): Date? {
+        return result.getDate(name)
+    }
+    fun timeResult(result: ResultSet, name: String): Date? {
+        return result.getTime(name)
+    }
+    fun timestampResult(result: ResultSet, name: String): Date? {
+        return result.getTimestamp(name)
+    }
     fun boolResult(result: ResultSet, name: String): Boolean?
     fun doubleResult(result: ResultSet, name: String): Double?
 }

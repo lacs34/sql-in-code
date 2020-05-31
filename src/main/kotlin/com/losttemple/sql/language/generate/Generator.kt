@@ -1,7 +1,10 @@
 package com.losttemple.sql.language.generate
 
+import java.math.BigInteger
+import java.sql.Date
+import java.sql.Time
+import java.sql.Timestamp
 import java.time.Duration
-import java.util.*
 
 enum class GroupStatus {
     None,
@@ -51,9 +54,11 @@ interface ContractExpression: ExpressionConstructor {
 }
 
 interface ExpressionConstructor {
-    fun constance(value: Int?)
+    fun constance(value: BigInteger?)
     fun constance(value: String?)
     fun constance(value: Date?)
+    fun constance(value: Time?)
+    fun constance(value: Timestamp?)
     fun constance(value: Boolean?)
     fun constance(value: Double?)
     fun and()

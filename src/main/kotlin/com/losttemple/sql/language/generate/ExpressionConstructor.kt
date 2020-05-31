@@ -1,6 +1,9 @@
 package com.losttemple.sql.language.generate
 
 import com.losttemple.sql.language.operator.SqlDialect
+import java.math.BigInteger
+import java.sql.Time
+import java.sql.Timestamp
 import java.time.Duration
 import java.util.*
 import kotlin.collections.ArrayList
@@ -90,7 +93,7 @@ class DefaultExpressionConstructor(
         }
     }
 
-    override fun constance(value: Int?) {
+    override fun constance(value: BigInteger?) {
         operators.push{ it.dialect.constance(value) }
     }
 
@@ -98,7 +101,15 @@ class DefaultExpressionConstructor(
         operators.push{ it.dialect.constance(value) }
     }
 
-    override fun constance(value: Date?) {
+    override fun constance(value: java.sql.Date?) {
+        operators.push{ it.dialect.constance(value) }
+    }
+
+    override fun constance(value: Time?) {
+        operators.push{ it.dialect.constance(value) }
+    }
+
+    override fun constance(value: Timestamp?) {
         operators.push{ it.dialect.constance(value) }
     }
 

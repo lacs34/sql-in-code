@@ -6,8 +6,11 @@ import com.losttemple.sql.language.dialects.JdbcStringParameter
 import com.losttemple.sql.language.generate.ExpressionConstructor
 import com.losttemple.sql.language.generate.ReferenceConstructor
 import com.losttemple.sql.language.generate.SourceReference
-import com.losttemple.sql.language.operator.sources.SourceColumn
+import com.losttemple.sql.language.operator.sources.*
 import com.losttemple.sql.language.types.*
+import java.math.BigInteger
+import java.sql.Timestamp
+import java.sql.Types
 import java.util.*
 
 
@@ -81,7 +84,7 @@ class SqlTypeParameter<T>(private val value: SqlType<T>): SqlParameter {
     }
 }
 
-class IntSqlParameter(private val value: Int?): SqlParameter {
+class IntSqlParameter(private val value: BigInteger?): SqlParameter {
     override fun setParam(constructor: ExpressionConstructor) {
         constructor.constance(value)
     }
@@ -95,7 +98,7 @@ class StringSqlParameter(private val value: String?): SqlParameter {
 
 class DateSqlParameter(private val value: Date?): SqlParameter {
     override fun setParam(constructor: ExpressionConstructor) {
-        constructor.constance(value)
+        constructor.constance(if (value == null) value else Timestamp(value.time))
     }
 }
 
@@ -128,7 +131,7 @@ class IntSourceColumn(private val setReference: SetRef, override val name: Strin
     }
 
     override fun generateParameter(parameter: Int?): SqlParameter {
-        return IntSqlParameter(parameter)
+        return IntSqlParameter(parameter?.toBigInteger())
     }
 }
 
@@ -217,8 +220,44 @@ class DoubleSourceColumn(private val setReference: SetRef, override val name: St
 }
 
 open class  DbSource(val reference: SetRef) {
-    fun intColumn(name: String): SourceColumn<Int> {
-        return IntSourceColumn(reference, name)
+    fun tinyIntColumn(name: String): ShortColumn {
+        return ShortColumn(reference, name, Types.TINYINT, 8)
+    }
+
+    fun smallIntColumn(name: String): ShortColumn {
+        return ShortColumn(reference, name, Types.SMALLINT, 16)
+    }
+
+    fun intColumn(name: String): IntColumn {
+        return IntColumn(reference, name, Types.INTEGER, 32)
+    }
+
+    fun bigIntColumn(name: String): LongColumn {
+        return LongColumn(reference, name, Types.BIGINT, 64)
+    }
+
+    fun charColumn(name: String): StringColumn {
+        return StringColumn(reference, name, Types.CHAR)
+    }
+
+    fun varCharColumn(name: String): StringColumn {
+        return StringColumn(reference, name, Types.VARCHAR)
+    }
+
+    fun longVarCharColumn(name: String): StringColumn {
+        return StringColumn(reference, name, Types.LONGNVARCHAR)
+    }
+
+    fun nCharColumn(name: String): StringColumn {
+        return StringColumn(reference, name, Types.NCHAR)
+    }
+
+    fun varNCharColumn(name: String): StringColumn {
+        return StringColumn(reference, name, Types.NVARCHAR)
+    }
+
+    fun longNVarCharColumn(name: String): StringColumn {
+        return StringColumn(reference, name, Types.LONGNVARCHAR)
     }
 
     fun stringColumn(name: String): SourceColumn<String> {

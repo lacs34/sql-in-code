@@ -113,7 +113,7 @@ class IntColumnConstEqualBool(private val left: SqlType<Int>, private val right:
 
     override fun push(constructor: ExpressionConstructor) {
         left.push(constructor)
-        constructor.constance(right)
+        constructor.constance(right.toBigInteger())
         constructor.eq()
     }
 }
@@ -157,7 +157,7 @@ class IntColumnConstGreaterBool(private val left: SqlType<Int>, private val righ
 
     override fun push(constructor: ExpressionConstructor) {
         left.push(constructor)
-        constructor.constance(right)
+        constructor.constance(right.toBigInteger())
         constructor.greater()
     }
 }
