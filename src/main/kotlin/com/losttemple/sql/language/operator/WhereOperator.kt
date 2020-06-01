@@ -42,6 +42,52 @@ fun embedContract(source: SourceReference, expression: ExpressionConstructor, ha
     contract.commit()
 }
 
+fun embedOrderContract(source: SourceReference, expression: OrderExpression, handler: ContractOrderExpression.() -> Unit) {
+    source.turnToEmbed()
+    val contract = expression.contract()
+    val embedConstructor = object: ContractOrderExpression by contract {
+        override fun orderAscending(): ExpressionConstructor {
+            val ca = contract.orderAscending()
+            return object: ExpressionConstructor by ca {
+                override fun reference(sourceHash: (SourceReference) -> Unit, constructor: (ReferenceConstructor) -> Unit): Boolean {
+                    return ca.reference({
+                        sourceHash(it)
+                        it.turnToEmbed()
+                    }, constructor)
+                }
+
+                override fun pushDown(direction: (SourceReference) -> Unit, destination: (ReferenceConstructor) -> Unit) {
+                    return ca.pushDown({
+                        direction(it)
+                        it.turnToEmbed()
+                    }, destination)
+                }
+            }
+        }
+
+        override fun orderDescending(): ExpressionConstructor {
+            val ca = contract.orderDescending()
+            return object: ExpressionConstructor by ca {
+                override fun reference(sourceHash: (SourceReference) -> Unit, constructor: (ReferenceConstructor) -> Unit): Boolean {
+                    return ca.reference({
+                        sourceHash(it)
+                        it.turnToEmbed()
+                    }, constructor)
+                }
+
+                override fun pushDown(direction: (SourceReference) -> Unit, destination: (ReferenceConstructor) -> Unit) {
+                    return ca.pushDown({
+                        direction(it)
+                        it.turnToEmbed()
+                    }, destination)
+                }
+            }
+        }
+    }
+    embedConstructor.handler()
+    contract.commit()
+}
+
 class FilteredSet<T>(private val sourceSet: DbSet<T>): DbSet<T>, SqlSet {
     override val description: T = sourceSet.wrapDescription(DummyPrefix(this))
     lateinit var condition: SqlType<Boolean>
@@ -56,7 +102,7 @@ class FilteredSet<T>(private val sourceSet: DbSet<T>): DbSet<T>, SqlSet {
 
     override fun push(constructor: SourceReference) {
         sourceSet.set.push(constructor)
-        if (constructor.limitStatus != LimitStatus.None || constructor.orderStatus != OrderStatus.None) {
+        if (constructor.limitStatus != LimitStatus.None || constructor.hasOrder) {
             embedContract(constructor, constructor.where) {
                 condition.push(this)
             }

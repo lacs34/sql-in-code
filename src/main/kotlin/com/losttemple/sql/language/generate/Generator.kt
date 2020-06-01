@@ -45,8 +45,8 @@ interface SourceReference {
     fun aggregate()
     val groupStatus: GroupStatus
     fun turnToEmbed(): QueryConstructor
-    val order: ExpressionConstructor
-    var orderStatus: OrderStatus
+    val order: OrderExpression
+    val hasOrder: Boolean
 }
 
 interface ContractExpression: ExpressionConstructor {
@@ -92,6 +92,12 @@ interface SourceConstructor {
 }
 
 fun ExpressionConstructor.withContract(builder: ContractExpression.() -> Unit) {
+    val contract = contract()
+    contract.builder()
+    contract.commit()
+}
+
+fun OrderExpression.withContract(builder: ContractOrderExpression.() -> Unit) {
     val contract = contract()
     contract.builder()
     contract.commit()

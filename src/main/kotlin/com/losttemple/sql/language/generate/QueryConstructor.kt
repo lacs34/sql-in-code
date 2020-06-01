@@ -13,6 +13,16 @@ enum class ParentKind {
     Source
 }
 
+enum class OrderOrientation {
+    Ascending,
+    Descending
+}
+
+data class OrderKey(
+        val key: DefaultExpressionConstructor,
+        val orientation: OrderOrientation
+)
+
 class DefaultQueryConstructor(private val parent: DefaultQueryConstructor?, private val parentKind: ParentKind):
         QueryConstructor, ExpressionSource, HashTarget {
     constructor(): this(null, ParentKind.Select)
@@ -26,8 +36,7 @@ class DefaultQueryConstructor(private val parent: DefaultQueryConstructor?, priv
     private var limitStatusValue = LimitStatus.None
     private var groupKey = DefaultExpressionConstructor(this, null)
     private var isAggregate = false
-    private var orderKey = DefaultExpressionConstructor(this, null)
-    private var orderStatusValue = OrderStatus.None
+    private var orderConstructor: DefaultOrderExpression = DefaultOrderExpression(this, null)
     private val selectOperator = HashMap<String, (EvaluateContext) -> Unit>()
     private var selectOperatorCount = 0
     private var sourceEvaluator: SourceEvaluatorWithReference? = null
@@ -118,6 +127,12 @@ class DefaultQueryConstructor(private val parent: DefaultQueryConstructor?, priv
             return GroupStatus.Group
         }
 
+    override val order: OrderExpression
+        get() = orderConstructor
+
+    override val hasOrder: Boolean
+        get() = orderConstructor.hasOrder
+
     override fun turnToEmbed(): QueryConstructor {
         val embedQuery = DefaultQueryConstructor(this, ParentKind.Source)
         val topSource = source.popTop()
@@ -138,11 +153,9 @@ class DefaultQueryConstructor(private val parent: DefaultQueryConstructor?, priv
             val havingClone = havingConstructor.cloneAndClear(embedQuery)
             embedQuery.havingConstructor = havingClone
         }
-        if (orderStatus != OrderStatus.None) {
-            val orderClone = orderKey.cloneAndClear(embedQuery)
-            embedQuery.orderKey = orderClone
-            embedQuery.orderStatus = orderStatus
-            orderStatus = OrderStatus.None
+        if (hasOrder) {
+            val orderClone = orderConstructor.cloneAndClear(embedQuery)
+            embedQuery.orderConstructor = orderClone
         }
         when (limitStatusValue) {
             LimitStatus.Limit -> {
@@ -155,18 +168,6 @@ class DefaultQueryConstructor(private val parent: DefaultQueryConstructor?, priv
         }
         return embedQuery
     }
-
-    override val order: ExpressionConstructor
-        get() = orderKey
-
-    override var orderStatus: OrderStatus
-        get() = orderStatusValue
-        set(value) {
-            orderStatusValue = value
-            if (value == OrderStatus.None) {
-                orderKey.clear()
-            }
-        }
 
     fun hash1(): HashSqlSegment {
         val dialect = HashDialect()
@@ -186,15 +187,7 @@ class DefaultQueryConstructor(private val parent: DefaultQueryConstructor?, priv
             havingConstructor.evaluate(innerExports)
             dialect.having()
         }
-        if (orderStatus != OrderStatus.None) {
-            orderKey.evaluate(innerExports)
-            if (orderStatus == OrderStatus.Ascending) {
-                dialect.order()
-            }
-            else {
-                dialect.orderDesc()
-            }
-        }
+        orderConstructor.push(innerExports)
         when (limitStatus) {
             LimitStatus.Limit -> {
                 dialect.limit(limitCount)
@@ -244,15 +237,7 @@ class DefaultQueryConstructor(private val parent: DefaultQueryConstructor?, priv
             havingConstructor.evaluate(context)
             dialect.having()
         }
-        if (orderStatus != OrderStatus.None) {
-            orderKey.evaluate(context)
-            if (orderStatus == OrderStatus.Ascending) {
-                dialect.order()
-            }
-            else {
-                dialect.orderDesc()
-            }
-        }
+        orderConstructor.push(context)
         when (limitStatus) {
             LimitStatus.Limit -> {
                 dialect.limit(limitCount)
@@ -351,15 +336,7 @@ class DefaultQueryConstructor(private val parent: DefaultQueryConstructor?, priv
             havingConstructor.evaluate(context)
             dialect.having()
         }
-        if (orderStatus != OrderStatus.None) {
-            orderKey.evaluate(context)
-            if (orderStatus == OrderStatus.Ascending) {
-                dialect.order()
-            }
-            else {
-                dialect.orderDesc()
-            }
-        }
+        orderConstructor.push(context)
         when (limitStatus) {
             LimitStatus.Limit -> {
                 dialect.limit(limitCount)

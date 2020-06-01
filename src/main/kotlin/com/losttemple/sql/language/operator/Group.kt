@@ -25,13 +25,13 @@ class GroupSet<T, K>(private val sourceSet: DbSet<T>): DbSet<T>, SqlSet {
                 }
             }
         }
-        else if (constructor.orderStatus != OrderStatus.None) {
+        else if (constructor.hasOrder) {
             constructor.group.withContract {
                 for (key in keys) {
                     key.push(this)
                 }
             }
-            constructor.orderStatus = OrderStatus.None
+            constructor.order.clearOrder()
         }
         else {
             constructor.group.withContract {

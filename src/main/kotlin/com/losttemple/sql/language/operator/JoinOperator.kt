@@ -48,12 +48,12 @@ class JoinOnlySet(private val left: SqlSet, private val right: SqlSet, private v
     override fun push(constructor: SourceReference) {
         left.push(constructor)
         if (!constructor.whereAlwaysTrue || constructor.groupStatus != GroupStatus.None ||
-                constructor.orderStatus != OrderStatus.None || constructor.limitStatus != LimitStatus.None) {
+                constructor.hasOrder || constructor.limitStatus != LimitStatus.None) {
             constructor.turnToEmbed()
         }
         right.push(constructor)
         if (!constructor.whereAlwaysTrue || constructor.groupStatus != GroupStatus.None ||
-                constructor.orderStatus != OrderStatus.None || constructor.limitStatus != LimitStatus.None) {
+                constructor.hasOrder || constructor.limitStatus != LimitStatus.None) {
             constructor.turnToEmbed()
         }
         when (type) {
@@ -83,12 +83,12 @@ class JoinResultSet(private val left: SqlSet, private val right: SqlSet, private
     override fun push(constructor: SourceReference) {
         left.push(constructor)
         if (!constructor.whereAlwaysTrue || constructor.groupStatus != GroupStatus.None ||
-                constructor.orderStatus != OrderStatus.None || constructor.limitStatus != LimitStatus.None) {
+                constructor.hasOrder || constructor.limitStatus != LimitStatus.None) {
             constructor.turnToEmbed()
         }
         right.push(constructor)
         if (!constructor.whereAlwaysTrue || constructor.groupStatus != GroupStatus.None ||
-                constructor.orderStatus != OrderStatus.None || constructor.limitStatus != LimitStatus.None) {
+                constructor.hasOrder || constructor.limitStatus != LimitStatus.None) {
             constructor.turnToEmbed()
         }
         when (type) {

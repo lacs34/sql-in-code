@@ -152,6 +152,20 @@ class QueryTests {
 	}
 
 	@Test
+	fun order() {
+		val result = h2.run {
+			from { Rooms(it) }.order { id }.order { floor }.useAll().select {
+				object {
+					val id = it.id()
+					val floor = it.floor()
+					val capacity = it.capacity()
+				}
+			}
+		}
+		assert(true)
+	}
+
+	@Test
 	fun basicInsert() {
 		val result = h2.run {
 			db { Rooms(it) }.insert {

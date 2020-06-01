@@ -11,10 +11,9 @@ class AggregateSet<T>(private val sourceSet: DbSet<T>): SqlSet {
             constructor.turnToEmbed()
             constructor.aggregate()
         }
-        else if (constructor.orderStatus != OrderStatus.None) {
+        else if (constructor.hasOrder) {
             constructor.turnToEmbed()
             constructor.aggregate()
-            constructor.orderStatus = OrderStatus.None
         }
         else {
             constructor.aggregate()
