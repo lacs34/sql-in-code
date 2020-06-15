@@ -500,6 +500,22 @@ class MySqlDialect: SqlDialect {
     }
 }
 
+interface EnvironmentRunner<R> {
+    fun runWithEnvironment(environment: DialectEnvironment): R
+}
+
+interface EnvironmentRunner1<A, R> {
+    fun runWithEnvironment(environment: DialectEnvironment, arg: A): R
+}
+
+interface EnvironmentRunner2<A1, A2, R> {
+    fun runWithEnvironment(environment: DialectEnvironment, arg1: A1, arg2: A2): R
+}
+
+interface EnvironmentRunner3<A1, A2, A3, R> {
+    fun runWithEnvironment(environment: DialectEnvironment, arg1: A1, arg2: A2, arg3: A3): R
+}
+
 interface DialectEnvironment: AutoCloseable {
     fun <T, R> DbResult<T>.select(mapper: QueryResultAccessor.(T)->R): List<R>
     operator fun <T> DbInstance<SqlType<T>>.invoke(): T?
@@ -509,6 +525,18 @@ interface DialectEnvironment: AutoCloseable {
     operator fun Updater.invoke(): Int
     fun <T: DbSource> DbTableDescription<T>.delete()
     fun <T: DbSource> FilteredTableDescriptor<T>.delete()
+    operator fun <R> EnvironmentRunner<R>.invoke(): R {
+        return runWithEnvironment(this@DialectEnvironment)
+    }
+    operator fun <A, R> EnvironmentRunner1<A, R>.invoke(arg: A): R {
+        return runWithEnvironment(this@DialectEnvironment, arg)
+    }
+    operator fun <A1, A2, R> EnvironmentRunner2<A1, A2, R>.invoke(arg1: A1, arg2: A2): R {
+        return runWithEnvironment(this@DialectEnvironment, arg1, arg2)
+    }
+    operator fun <A1, A2, A3, R> EnvironmentRunner3<A1, A2, A3, R>.invoke(arg1: A1, arg2: A2, arg3: A3): R {
+        return runWithEnvironment(this@DialectEnvironment, arg1, arg2, arg3)
+    }
     /*
     fun <T: DbSource> FilteredDbTable<T>.delete()
     fun <T: DbSource> DbTableDescription<T>.delete()

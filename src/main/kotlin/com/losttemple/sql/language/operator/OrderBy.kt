@@ -21,42 +21,41 @@ class OrderSet<T, K: Comparable<K>>(private val sourceSet: DbSet<T>, private val
 
     override fun push(constructor: SourceReference) {
         sourceSet.set.push(constructor)
-        if (constructor.limitStatus != LimitStatus.None) {
-            embedOrderContract(constructor, constructor.order) {
-                for (key in keys) {
-                    val order = if (key.orientation == OrderOrientation.Ascending) {
-                        orderAscending()
+        when {
+            constructor.limitStatus != LimitStatus.None -> {
+                embedOrderContract(constructor, constructor.order) {
+                    for (key in keys) {
+                        val order = if (key.orientation == OrderOrientation.Ascending) {
+                            orderAscending()
+                        } else {
+                            orderDescending()
+                        }
+                        key.key.push(order)
                     }
-                    else {
-                        orderDescending()
-                    }
-                    key.key.push(order)
                 }
             }
-        }
-        else if (constructor.hasOrder) {
-            constructor.order.withContract {
-                for (key in keys.reversed()) {
-                    val order = if (key.orientation == OrderOrientation.Ascending) {
-                        orderFirstAscending()
+            constructor.hasOrder -> {
+                constructor.order.withContract {
+                    for (key in keys.reversed()) {
+                        val order = if (key.orientation == OrderOrientation.Ascending) {
+                            orderFirstAscending()
+                        } else {
+                            orderFirstDescending()
+                        }
+                        key.key.push(order)
                     }
-                    else {
-                        orderFirstDescending()
-                    }
-                    key.key.push(order)
                 }
             }
-        }
-        else {
-            constructor.order.withContract {
-                for (key in keys) {
-                    val order = if (key.orientation == OrderOrientation.Ascending) {
-                        orderAscending()
+            else -> {
+                constructor.order.withContract {
+                    for (key in keys) {
+                        val order = if (key.orientation == OrderOrientation.Ascending) {
+                            orderAscending()
+                        } else {
+                            orderDescending()
+                        }
+                        key.key.push(order)
                     }
-                    else {
-                        orderDescending()
-                    }
-                    key.key.push(order)
                 }
             }
         }
