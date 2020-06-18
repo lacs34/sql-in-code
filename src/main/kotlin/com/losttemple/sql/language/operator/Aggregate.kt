@@ -85,6 +85,19 @@ class CountValue<T>(private val sourceValue: SqlType<T>, private val setRef: Set
     }
 }
 
+class DirectCountValue(private val setRef: SetRef): SqlType<Int>, SqlInt {
+    override val reference: Collection<SetRef>
+        get() = listOf(setRef)
+
+    override fun push(constructor: ExpressionConstructor) {
+        constructor.constance(0.toBigInteger())
+        constructor.count()
+        constructor.pushDown({ setRef.set.push(it) }) {
+            setRef.reference(it)
+        }
+    }
+}
+
 class AggregateOperatorEnvironment<T>(private val source: T,
                                       private val ref: SetRef) {
     fun <R> max(value: T.() -> SqlType<R>): SqlType<R> where R: Comparable<R>{
@@ -105,6 +118,10 @@ class AggregateOperatorEnvironment<T>(private val source: T,
     fun <R> count(value: T.() -> SqlType<R>): SqlType<Int> where R: Comparable<R>{
         val parameter = source.value()
         return CountValue(parameter, ref)
+    }
+
+    fun count(): SqlType<Int> {
+        return DirectCountValue(ref)
     }
 }
 
