@@ -36,6 +36,20 @@ fun <T: Any> DbInstance<T>.useAll(): DbInstanceResult<T> {
     }
 }
 
+fun <T: Any> allFields(): (CalcConfig, T)-> Unit {
+    return ::allFields
+}
+
+fun <T: Any> allFields(config: CalcConfig, source: T) {
+    val descClass = source.javaClass.kotlin
+    val properties = descClass.declaredMemberProperties.filter {
+        it.returnType.isSubtypeOf(SqlTypeCommon::class.createType())
+    }
+    properties.forEach {
+        config.need(it.get(source) as SqlTypeCommon)
+    }
+}
+
 data class PropertyAssign<SC, TC: DbSource>(
         val sourceProperty: KProperty<*>,
         val sourceValue: Any?,

@@ -160,6 +160,12 @@ fun <T> DbSet<T>.use(config: CalcConfig.(T)->Unit): DbResult<T> {
     return configStorage.generate(description)
 }
 
+fun <T> DbSet<T>.with(config: (CalcConfig, T)->Unit): DbResult<T> {
+    val configStorage = CalcConfig(set)
+    config(configStorage, description)
+    return configStorage.generate(description)
+}
+
 class DbInstanceResult<T>(private val columns: List<SqlTypeCommon>, private val description: T, private val source: SqlSet) {
     fun <R> select(machine: SqlDialect, connection: Connection, mapper: QueryResultAccessor.(T)->R): List<R> {
         val query = DefaultQueryConstructor()
