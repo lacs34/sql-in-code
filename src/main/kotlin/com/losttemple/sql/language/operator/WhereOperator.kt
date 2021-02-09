@@ -164,6 +164,17 @@ class IntColumnConstEqualBool(private val left: SqlType<Int>, private val right:
     }
 }
 
+class LongColumnConstEqualBool(private val left: SqlType<Long>, private val right: Long): SqlBool {
+    override val reference: Collection<SetRef>
+        get() = left.reference
+
+    override fun push(constructor: ExpressionConstructor) {
+        left.push(constructor)
+        constructor.constance(right.toBigInteger())
+        constructor.eq()
+    }
+}
+
 class StringColumnConstEqualBool(private val left: SqlType<String>, private val right: String): SqlBool {
     override val reference: Collection<SetRef>
         get() = left.reference
@@ -225,6 +236,10 @@ infix fun <T> SqlType<T>.eq(another: SqlType<T>): SqlBool {
 
 infix fun SqlType<Int>.eq(another: Int): SqlBool {
     return IntColumnConstEqualBool(this, another)
+}
+
+infix fun SqlType<Long>.eq(another: Long): SqlBool {
+    return LongColumnConstEqualBool(this, another)
 }
 
 infix fun SqlType<String>.eq(another: String): SqlBool {
