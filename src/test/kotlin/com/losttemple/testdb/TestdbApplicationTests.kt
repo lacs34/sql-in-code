@@ -152,6 +152,66 @@ class QueryTests {
 	}
 
 	@Test
+	fun innerJoin() {
+		val result = h2.run {
+			(from { Rooms(it) } innerJoin from { Apartments(it) } on { room, apartment ->
+				room.apartment eq apartment.id
+			} select { room, apartment ->
+				object {
+					val id = room.id
+					val address =apartment.address
+				}
+			}).order { id }.useAll().select {
+				object {
+					val id = it.id()
+					val address = it.address()
+				}
+			}
+		}
+		assert(true)
+	}
+
+	@Test
+	fun rightJoin() {
+		val result = h2.run {
+			(from { Rooms(it) } rightJoin  from { Apartments(it) } on { room, apartment ->
+				room.apartment eq apartment.id
+			} select { room, apartment ->
+				object {
+					val id = room.id
+					val address =apartment.address
+				}
+			}).order { id }.useAll().select {
+				object {
+					val id = it.id()
+					val address = it.address()
+				}
+			}
+		}
+		assert(true)
+	}
+
+	@Test
+	fun leftJoin() {
+		val result = h2.run {
+			(from { Rooms(it) } leftJoin  from { Apartments(it) } on { room, apartment ->
+				room.apartment eq apartment.id
+			} select { room, apartment ->
+				object {
+					val id = room.id
+					val address =apartment.address
+				}
+			}).order { id }.useAll().select {
+				object {
+					val id = it.id()
+					val address = it.address()
+				}
+			}
+		}
+		assert(true)
+	}
+
+	@Test
 	fun order() {
 		val result = h2.run {
 			from { Rooms(it) }.order { id }.order { floor }.useAll().select {

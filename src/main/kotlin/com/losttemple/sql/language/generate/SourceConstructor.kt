@@ -116,7 +116,12 @@ class DefaultSourceConstructor(source: Stack<SourceEvaluatorWithReference>, priv
                         context.idGenerator,
                         exports,
                         leftExports.referenceMapping + rightExports.referenceMapping)
-                condition.evaluate(context2)
+                if (condition.isEmpty()) {
+                    context2.dialect.now()
+                }
+                else {
+                    condition.evaluate(context2)
+                }
                 context.dialect.leftJoin()
                 return EC(
                         exports,
@@ -151,7 +156,12 @@ class DefaultSourceConstructor(source: Stack<SourceEvaluatorWithReference>, priv
                         context.idGenerator,
                         exports,
                         leftExports.referenceMapping + rightExports.referenceMapping)
-                condition.evaluate(context2)
+                if (condition.isEmpty()) {
+                    context2.dialect.now()
+                }
+                else {
+                    condition.evaluate(context2)
+                }
                 context.dialect.rightJoin()
                 return EC(
                         exports,
