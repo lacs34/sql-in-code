@@ -230,6 +230,39 @@ class DoubleColumnConstGreaterBool(private val left: SqlType<Double>, private va
     }
 }
 
+class ColumnsLessBool<T: Comparable<T>>(private val left: SqlType<T>, private val right: SqlType<T>): SqlBool {
+    override val reference: Collection<SetRef>
+        get() = left.reference + right.reference
+
+    override fun push(constructor: ExpressionConstructor) {
+        right.push(constructor)
+        left.push(constructor)
+        constructor.greater()
+    }
+}
+
+class IntColumnConstLessBool(private val left: SqlType<Int>, private val right: Int): SqlBool {
+    override val reference: Collection<SetRef>
+        get() = left.reference
+
+    override fun push(constructor: ExpressionConstructor) {
+        constructor.constance(right.toBigInteger())
+        left.push(constructor)
+        constructor.greater()
+    }
+}
+
+class DoubleColumnConstLessBool(private val left: SqlType<Double>, private val right: Double): SqlBool {
+    override val reference: Collection<SetRef>
+        get() = left.reference
+
+    override fun push(constructor: ExpressionConstructor) {
+        constructor.constance(right)
+        left.push(constructor)
+        constructor.greater()
+    }
+}
+
 infix fun <T> SqlType<T>.eq(another: SqlType<T>): SqlBool {
     return ColumnsEqualBool(this, another)
 }
@@ -264,6 +297,22 @@ infix fun SqlType<Double>.gt(another: Double): SqlBool {
 
 infix fun SqlType<Double>.gt(another: Number): SqlBool {
     return DoubleColumnConstGreaterBool(this, another.toDouble())
+}
+
+infix fun <T: Comparable<T>> SqlType<T>.lt(another: SqlType<T>): SqlBool {
+    return ColumnsLessBool(this, another)
+}
+
+infix fun SqlType<Int>.lt(another: Int): SqlBool {
+    return IntColumnConstLessBool(this, another)
+}
+
+infix fun SqlType<Double>.lt(another: Double): SqlBool {
+    return DoubleColumnConstLessBool(this, another)
+}
+
+infix fun SqlType<Double>.lt(another: Number): SqlBool {
+    return DoubleColumnConstLessBool(this, another.toDouble())
 }
 class CalcConfig(private val set: SqlSet) {
     private val columns: MutableList<SqlTypeCommon> = ArrayList()
